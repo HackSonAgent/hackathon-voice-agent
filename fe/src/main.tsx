@@ -7,6 +7,7 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
+import setupLocatorUI from '@locator/runtime'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
 import { handleServerError } from '@/utils/handle-server-error'
@@ -15,10 +16,9 @@ import { ThemeProvider } from './context/theme-context'
 import './index.css'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
-import setupLocatorUI from "@locator/runtime";
 
-if (process.env.NODE_ENV === "development") {
-  setupLocatorUI();
+if (process.env.NODE_ENV === 'development') {
+  setupLocatorUI()
 }
 const queryClient = new QueryClient({
   defaultOptions: {

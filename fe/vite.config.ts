@@ -8,7 +8,6 @@ import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss(), TanStackRouterVite()],
   resolve: {
-    
     alias: {
       '@': path.resolve(__dirname, './src'),
       // fix loading all icon chunks in dev mode

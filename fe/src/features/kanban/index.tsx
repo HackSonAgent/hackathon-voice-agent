@@ -1,17 +1,14 @@
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Header } from '@/components/layout/header';
-import { Main } from '@/components/layout/main';
-import { ProfileDropdown } from '@/components/profile-dropdown';
-import { Search } from '@/components/search';
-import { ThemeSwitch } from '@/components/theme-switch';
-import KanbanBoard from './components/board'; // Import our Kanban board component
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
+import { ThemeSwitch } from '@/components/theme-switch'
+import KanbanBoard from './components/board'
+
+// Import our Kanban board component
 
 export default function KanbanDashboard() {
   return (
@@ -30,21 +27,23 @@ export default function KanbanDashboard() {
         <div className='mb-4 flex items-center justify-between'>
           <h1 className='text-2xl font-bold tracking-tight'>Voice Agent</h1>
           <div className='flex items-center space-x-2'>
-            <Button variant="outline">Export Board</Button>
+            <Button variant='outline'>Export Board</Button>
             <Button>New Project</Button>
           </div>
         </div>
-        
+
         <Tabs defaultValue='board' className='space-y-4'>
           <TabsList>
             <TabsTrigger value='board'>Kanban Board</TabsTrigger>
             <TabsTrigger value='tasks'>Task List</TabsTrigger>
             <TabsTrigger value='timeline'>Timeline</TabsTrigger>
-            <TabsTrigger value='calendar' disabled>Calendar</TabsTrigger>
+            <TabsTrigger value='calendar' disabled>
+              Calendar
+            </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value='board' className='space-y-4'>
-            <div className='grid gap-4 grid-cols-1'>
+            <div className='grid grid-cols-1 gap-4'>
               <Card className='col-span-1'>
                 <CardHeader className='pb-2'>
                   <CardTitle className='text-xl'>Current Sprint</CardTitle>
@@ -56,7 +55,7 @@ export default function KanbanDashboard() {
               </Card>
             </div>
           </TabsContent>
-          
+
           <TabsContent value='tasks' className='space-y-4'>
             <Card>
               <CardHeader>
@@ -67,7 +66,7 @@ export default function KanbanDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
-			<TabsContent value='timeline' className='space-y-4'>
+          <TabsContent value='timeline' className='space-y-4'>
             <Card>
               <CardHeader>
                 <CardTitle>All Timeline Tasks</CardTitle>
@@ -80,7 +79,5 @@ export default function KanbanDashboard() {
         </Tabs>
       </Main>
     </>
-  );
+  )
 }
-
-

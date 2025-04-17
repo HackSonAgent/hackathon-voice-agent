@@ -17,11 +17,13 @@ import {
   IconUserCog,
   // IconUserOff,
 } from '@tabler/icons-react'
-import { AudioWaveform, Command, GalleryVerticalEnd,
-  // SquareKanban 
+import {
+  AudioWaveform,
+  Command,
+  GalleryVerticalEnd,
+  // SquareKanban
 } from 'lucide-react'
 import { type SidebarData } from '../types'
-
 
 export const sidebarData: SidebarData = {
   user: {

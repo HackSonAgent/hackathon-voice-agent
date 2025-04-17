@@ -107,10 +107,19 @@ export function TasksMutateDrawer({ open, onOpenChange, currentRow }: Props) {
                     onValueChange={field.onChange}
                     placeholder='Select dropdown'
                     items={[
-                      { label: 'In Progress', value: 'in progress' },
-                      { label: 'Backlog', value: 'backlog' },
+                      {
+                        label: 'In Progress',
+                        value: 'in progress',
+                      },
+                      {
+                        label: 'Backlog',
+                        value: 'backlog',
+                      },
                       { label: 'Todo', value: 'todo' },
-                      { label: 'Canceled', value: 'canceled' },
+                      {
+                        label: 'Canceled',
+                        value: 'canceled',
+                      },
                       { label: 'Done', value: 'done' },
                     ]}
                   />
