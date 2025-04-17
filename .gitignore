@@ -17,6 +17,9 @@ yarn.lock
 coverage/
 dist/
 build/
+.venv/
+data/customer_files_csv/
+data/customer_files_txt/
 
 # TypeScript
 *.tsbuildinfo
