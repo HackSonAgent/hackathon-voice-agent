@@ -28,7 +28,7 @@ export default function KanbanDashboard() {
 	  {/* ===== Main ===== */}
 	  <Main>
 		<div className='mb-4 flex items-center justify-between'>
-		  <h1 className='text-2xl font-bold tracking-tight'>Project groove</h1>
+		  <h1 className='text-2xl font-bold tracking-tight'>Voice Agent</h1>
 		  <div className='flex items-center space-x-2'>
 			<Button variant="outline">Export Board</Button>
 			<Button>New Project</Button>
