@@ -176,8 +176,8 @@ export const sidebarData: SidebarData = {
           ],
         },
         {
-          title: 'Help Center',
-          url: '/help-center',
+          title: 'Test API',
+          url: '/test-api',
           icon: IconHelp,
         },
       ],

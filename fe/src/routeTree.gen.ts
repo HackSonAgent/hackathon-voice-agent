@@ -34,6 +34,9 @@ const authForgotPasswordLazyImport = createFileRoute(
 const AuthenticatedSettingsRouteLazyImport = createFileRoute(
   '/_authenticated/settings',
 )()
+const AuthenticatedTestApiIndexLazyImport = createFileRoute(
+  '/_authenticated/test-api/',
+)()
 const AuthenticatedTasksIndexLazyImport = createFileRoute(
   '/_authenticated/tasks/',
 )()
@@ -42,9 +45,6 @@ const AuthenticatedSettingsIndexLazyImport = createFileRoute(
 )()
 const AuthenticatedKanbanIndexLazyImport = createFileRoute(
   '/_authenticated/kanban/',
-)()
-const AuthenticatedHelpCenterIndexLazyImport = createFileRoute(
-  '/_authenticated/help-center/',
 )()
 const AuthenticatedAppsIndexLazyImport = createFileRoute(
   '/_authenticated/apps/',
@@ -171,6 +171,15 @@ const auth500Route = auth500Import.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const AuthenticatedTestApiIndexLazyRoute =
+  AuthenticatedTestApiIndexLazyImport.update({
+    id: '/test-api/',
+    path: '/test-api/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/test-api/index.lazy').then((d) => d.Route),
+  )
+
 const AuthenticatedTasksIndexLazyRoute =
   AuthenticatedTasksIndexLazyImport.update({
     id: '/tasks/',
@@ -196,17 +205,6 @@ const AuthenticatedKanbanIndexLazyRoute =
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any).lazy(() =>
     import('./routes/_authenticated/kanban/index.lazy').then((d) => d.Route),
-  )
-
-const AuthenticatedHelpCenterIndexLazyRoute =
-  AuthenticatedHelpCenterIndexLazyImport.update({
-    id: '/help-center/',
-    path: '/help-center/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any).lazy(() =>
-    import('./routes/_authenticated/help-center/index.lazy').then(
-      (d) => d.Route,
-    ),
   )
 
 const AuthenticatedAppsIndexLazyRoute = AuthenticatedAppsIndexLazyImport.update(
@@ -416,13 +414,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppsIndexLazyImport
       parentRoute: typeof AuthenticatedRouteImport
     }
-    '/_authenticated/help-center/': {
-      id: '/_authenticated/help-center/'
-      path: '/help-center'
-      fullPath: '/help-center'
-      preLoaderRoute: typeof AuthenticatedHelpCenterIndexLazyImport
-      parentRoute: typeof AuthenticatedRouteImport
-    }
     '/_authenticated/kanban/': {
       id: '/_authenticated/kanban/'
       path: '/kanban'
@@ -442,6 +433,13 @@ declare module '@tanstack/react-router' {
       path: '/tasks'
       fullPath: '/tasks'
       preLoaderRoute: typeof AuthenticatedTasksIndexLazyImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/test-api/': {
+      id: '/_authenticated/test-api/'
+      path: '/test-api'
+      fullPath: '/test-api'
+      preLoaderRoute: typeof AuthenticatedTestApiIndexLazyImport
       parentRoute: typeof AuthenticatedRouteImport
     }
   }
@@ -480,9 +478,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAgentIndexLazyRoute: typeof AuthenticatedAgentIndexLazyRoute
   AuthenticatedAppsIndexLazyRoute: typeof AuthenticatedAppsIndexLazyRoute
-  AuthenticatedHelpCenterIndexLazyRoute: typeof AuthenticatedHelpCenterIndexLazyRoute
   AuthenticatedKanbanIndexLazyRoute: typeof AuthenticatedKanbanIndexLazyRoute
   AuthenticatedTasksIndexLazyRoute: typeof AuthenticatedTasksIndexLazyRoute
+  AuthenticatedTestApiIndexLazyRoute: typeof AuthenticatedTestApiIndexLazyRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -491,9 +489,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAgentIndexLazyRoute: AuthenticatedAgentIndexLazyRoute,
   AuthenticatedAppsIndexLazyRoute: AuthenticatedAppsIndexLazyRoute,
-  AuthenticatedHelpCenterIndexLazyRoute: AuthenticatedHelpCenterIndexLazyRoute,
   AuthenticatedKanbanIndexLazyRoute: AuthenticatedKanbanIndexLazyRoute,
   AuthenticatedTasksIndexLazyRoute: AuthenticatedTasksIndexLazyRoute,
+  AuthenticatedTestApiIndexLazyRoute: AuthenticatedTestApiIndexLazyRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -519,10 +517,10 @@ export interface FileRoutesByFullPath {
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsLazyRoute
   '/agent': typeof AuthenticatedAgentIndexLazyRoute
   '/apps': typeof AuthenticatedAppsIndexLazyRoute
-  '/help-center': typeof AuthenticatedHelpCenterIndexLazyRoute
   '/kanban': typeof AuthenticatedKanbanIndexLazyRoute
   '/settings/': typeof AuthenticatedSettingsIndexLazyRoute
   '/tasks': typeof AuthenticatedTasksIndexLazyRoute
+  '/test-api': typeof AuthenticatedTestApiIndexLazyRoute
 }
 
 export interface FileRoutesByTo {
@@ -543,10 +541,10 @@ export interface FileRoutesByTo {
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsLazyRoute
   '/agent': typeof AuthenticatedAgentIndexLazyRoute
   '/apps': typeof AuthenticatedAppsIndexLazyRoute
-  '/help-center': typeof AuthenticatedHelpCenterIndexLazyRoute
   '/kanban': typeof AuthenticatedKanbanIndexLazyRoute
   '/settings': typeof AuthenticatedSettingsIndexLazyRoute
   '/tasks': typeof AuthenticatedTasksIndexLazyRoute
+  '/test-api': typeof AuthenticatedTestApiIndexLazyRoute
 }
 
 export interface FileRoutesById {
@@ -571,10 +569,10 @@ export interface FileRoutesById {
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsLazyRoute
   '/_authenticated/agent/': typeof AuthenticatedAgentIndexLazyRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexLazyRoute
-  '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexLazyRoute
   '/_authenticated/kanban/': typeof AuthenticatedKanbanIndexLazyRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexLazyRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexLazyRoute
+  '/_authenticated/test-api/': typeof AuthenticatedTestApiIndexLazyRoute
 }
 
 export interface FileRouteTypes {
@@ -599,10 +597,10 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/agent'
     | '/apps'
-    | '/help-center'
     | '/kanban'
     | '/settings/'
     | '/tasks'
+    | '/test-api'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/500'
@@ -622,10 +620,10 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/agent'
     | '/apps'
-    | '/help-center'
     | '/kanban'
     | '/settings'
     | '/tasks'
+    | '/test-api'
   id:
     | '__root__'
     | '/_authenticated'
@@ -648,10 +646,10 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/notifications'
     | '/_authenticated/agent/'
     | '/_authenticated/apps/'
-    | '/_authenticated/help-center/'
     | '/_authenticated/kanban/'
     | '/_authenticated/settings/'
     | '/_authenticated/tasks/'
+    | '/_authenticated/test-api/'
   fileRoutesById: FileRoutesById
 }
 
@@ -716,9 +714,9 @@ export const routeTree = rootRoute
         "/_authenticated/",
         "/_authenticated/agent/",
         "/_authenticated/apps/",
-        "/_authenticated/help-center/",
         "/_authenticated/kanban/",
-        "/_authenticated/tasks/"
+        "/_authenticated/tasks/",
+        "/_authenticated/test-api/"
       ]
     },
     "/(auth)/500": {
@@ -793,10 +791,6 @@ export const routeTree = rootRoute
       "filePath": "_authenticated/apps/index.lazy.tsx",
       "parent": "/_authenticated"
     },
-    "/_authenticated/help-center/": {
-      "filePath": "_authenticated/help-center/index.lazy.tsx",
-      "parent": "/_authenticated"
-    },
     "/_authenticated/kanban/": {
       "filePath": "_authenticated/kanban/index.lazy.tsx",
       "parent": "/_authenticated"
@@ -807,6 +801,10 @@ export const routeTree = rootRoute
     },
     "/_authenticated/tasks/": {
       "filePath": "_authenticated/tasks/index.lazy.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/test-api/": {
+      "filePath": "_authenticated/test-api/index.lazy.tsx",
       "parent": "/_authenticated"
     }
   }
