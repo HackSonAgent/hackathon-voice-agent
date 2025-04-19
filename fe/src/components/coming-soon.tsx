@@ -1,16 +1,32 @@
 import { useState, useEffect } from 'react'
 import { IconPlanet } from '@tabler/icons-react'
 
+// Define TypeScript interfaces
+interface SpaceFact {
+  title: string;
+  explanation: string;
+  imageUrl: string;
+  date: string;
+}
+
+interface AppData {
+  title: string;
+  launchDate: string;
+  featuresComingSoon: string[];
+  spaceFact?: SpaceFact;
+}
+
 export default function ComingSoon() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // Initialize with proper types
+  const [data, setData] = useState<AppData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Fetch data from NASA's APOD API when component mounts
     const getData = async () => {
       try {
-        // Using NASA's Astronomy Picture of the Day API (no API key required for demo purposes)
+        // Using NASA's Astronomy Picture of the Day API
         const response = await fetch('https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY');
         
         if (!response.ok) {
@@ -38,8 +54,8 @@ export default function ComingSoon() {
         
         setLoading(false);
       } catch (err) {
-        console.error(err);
-        setError('Failed to fetch data from the cosmos');
+        // console.(err);
+        setError('Failed to fetch data from the cosmos'+err);
         setLoading(false);
       }
     };
@@ -56,7 +72,7 @@ export default function ComingSoon() {
           <p className="text-lg">Contacting the distant stars...</p>
         ) : error ? (
           <p className="text-red-500">{error}</p>
-        ) : (
+        ) : data ? (
           <>
             <h1 className='text-4xl leading-tight font-bold'>{data.title}</h1>
             <p className='text-2xl font-semibold'>Launching: {data.launchDate}</p>
@@ -69,9 +85,10 @@ export default function ComingSoon() {
                     src={data.spaceFact.imageUrl} 
                     alt={data.spaceFact.title}
                     className="w-full h-64 object-cover" 
-                    onError={(e) => {
-                      e.target.src = "/api/placeholder/400/320"; 
-                      e.target.alt = "Space image unavailable";
+                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                      const img = e.currentTarget;
+                      img.src = "/api/placeholder/400/320"; 
+                      img.alt = "Space image unavailable";
                     }}
                   />
                 )}
@@ -88,7 +105,7 @@ export default function ComingSoon() {
             <div className="mt-4 p-4 border border-gray-200 rounded-lg">
               <h2 className="text-xl mb-2 font-medium">Features Coming Soon:</h2>
               <ul className="space-y-2">
-                {data.featuresComingSoon.map((feature, index) => (
+                {data.featuresComingSoon.map((feature: string, index: number) => (
                   <li key={index} className="flex items-center">
                     <span className="mr-2 text-blue-500">✧</span>
                     {feature}
@@ -101,6 +118,8 @@ export default function ComingSoon() {
               Stay tuned for the grand unveiling!
             </p>
           </>
+        ) : (
+          <p>No data available</p>
         )}
       </div>
     </div>
