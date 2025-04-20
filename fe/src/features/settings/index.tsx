@@ -1,10 +1,10 @@
 import { Outlet } from '@tanstack/react-router'
 import {
-  IconBrowserCheck,
-  IconNotification,
-  IconPalette,
-  IconTool,
-  IconUser,
+  // IconBrowserCheck,
+  // IconNotification,
+  // IconPalette,
+  // IconTool,
+  IconAi
 } from '@tabler/icons-react'
 import { Separator } from '@/components/ui/separator'
 import { Header } from '@/components/layout/header'
@@ -17,7 +17,6 @@ import SidebarNav from './components/sidebar-nav'
 export default function Settings() {
   return (
     <>
-      {/* ===== Top Heading ===== */}
       <Header>
         <Search />
         <div className='ml-auto flex items-center space-x-4'>
@@ -32,7 +31,7 @@ export default function Settings() {
             Settings
           </h1>
           <p className='text-muted-foreground'>
-            Manage your account settings and set e-mail preferences.
+            Manage your LLM settings and preferences.
           </p>
         </div>
         <Separator className='my-4 lg:my-6' />
@@ -51,28 +50,28 @@ export default function Settings() {
 
 const sidebarNavItems = [
   {
-    title: 'Profile',
-    icon: <IconUser size={18} />,
+    title: 'llm',
+    icon: <IconAi size={18} />,
     href: '/settings',
   },
-  {
-    title: 'Account',
-    icon: <IconTool size={18} />,
-    href: '/settings/account',
-  },
-  {
-    title: 'Appearance',
-    icon: <IconPalette size={18} />,
-    href: '/settings/appearance',
-  },
-  {
-    title: 'Notifications',
-    icon: <IconNotification size={18} />,
-    href: '/settings/notifications',
-  },
-  {
-    title: 'Display',
-    icon: <IconBrowserCheck size={18} />,
-    href: '/settings/display',
-  },
+  // {
+  //   title: 'Account',
+  //   icon: <IconTool size={18} />,
+  //   href: '/settings/account',
+  // },
+  // {
+  //   title: 'Appearance',
+  //   icon: <IconPalette size={18} />,
+  //   href: '/settings/appearance',
+  // },
+  // {
+  //   title: 'Notifications',
+  //   icon: <IconNotification size={18} />,
+  //   href: '/settings/notifications',
+  // },
+  // {
+  //   title: 'Display',
+  //   icon: <IconBrowserCheck size={18} />,
+  //   href: '/settings/display',
+  // },
 ]

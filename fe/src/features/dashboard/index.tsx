@@ -9,32 +9,31 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
-import { TopNav } from '@/components/layout/top-nav'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { Overview } from './components/overview'
-import { RecentSales } from './components/recent-sales'
+import { VoiceActivityChart } from './components/voice-activity-chart'
+import { RecentInteractions } from './components/recent-interactions'
+import { AccuracyGauge } from './components/accuracy-gauge'
+import { PopularPhrases } from './components/popular-phrases'
 
-export default function Dashboard() {
+export default function VoiceAgentDashboard() {
   return (
     <>
       {/* ===== Top Heading ===== */}
       <Header>
-        <TopNav links={topNav} />
         <div className='ml-auto flex items-center space-x-4'>
           <Search />
           <ThemeSwitch />
           <ProfileDropdown />
         </div>
       </Header>
-
       {/* ===== Main ===== */}
       <Main>
         <div className='mb-2 flex items-center justify-between space-y-2'>
-          <h1 className='text-2xl font-bold tracking-tight'>Dashboard</h1>
+          <h1 className='text-2xl font-bold tracking-tight'>Voice Agent Analytics</h1>
           <div className='flex items-center space-x-2'>
-            <Button>Download</Button>
+            <Button>Export Report</Button>
           </div>
         </div>
         <Tabs
@@ -45,14 +44,14 @@ export default function Dashboard() {
           <div className='w-full overflow-x-auto pb-2'>
             <TabsList>
               <TabsTrigger value='overview'>Overview</TabsTrigger>
-              <TabsTrigger value='analytics' disabled>
-                Analytics
+              <TabsTrigger value='voice-performance' disabled>
+                Voice Performance
               </TabsTrigger>
-              <TabsTrigger value='reports' disabled>
-                Reports
+              <TabsTrigger value='user-interactions' disabled>
+                User Interactions
               </TabsTrigger>
-              <TabsTrigger value='notifications' disabled>
-                Notifications
+              <TabsTrigger value='voice-settings' disabled>
+                Voice Settings
               </TabsTrigger>
             </TabsList>
           </div>
@@ -61,7 +60,7 @@ export default function Dashboard() {
               <Card>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                   <CardTitle className='text-sm font-medium'>
-                    Total Revenue
+                    Processed Calls
                   </CardTitle>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
@@ -73,20 +72,20 @@ export default function Dashboard() {
                     strokeWidth='2'
                     className='text-muted-foreground h-4 w-4'
                   >
-                    <path d='M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' />
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className='text-2xl font-bold'>$45,231.89</div>
+                  <div className='text-2xl font-bold'>12,546</div>
                   <p className='text-muted-foreground text-xs'>
-                    +20.1% from last month
+                    +23.4% from last month
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                   <CardTitle className='text-sm font-medium'>
-                    Subscriptions
+                    Recognition Accuracy
                   </CardTitle>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
@@ -98,21 +97,23 @@ export default function Dashboard() {
                     strokeWidth='2'
                     className='text-muted-foreground h-4 w-4'
                   >
-                    <path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' />
-                    <circle cx='9' cy='7' r='4' />
-                    <path d='M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' />
+                    <path d="M12 2a10 10 0 1 0 10 10H12V2z" />
+                    <path d="M12 2a10 10 0 0 1 10 10h-10V2z" />
+                    <path d="M12 12l8.9 3.2" />
+                    <path d="M12 12l3.2 8.9" />
+                    <path d="M12 12H2" />
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className='text-2xl font-bold'>+2350</div>
+                  <div className='text-2xl font-bold'>94.7%</div>
                   <p className='text-muted-foreground text-xs'>
-                    +180.1% from last month
+                    +2.3% from last month
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>Sales</CardTitle>
+                  <CardTitle className='text-sm font-medium'>Average Response Time</CardTitle>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
                     viewBox='0 0 24 24'
@@ -123,21 +124,21 @@ export default function Dashboard() {
                     strokeWidth='2'
                     className='text-muted-foreground h-4 w-4'
                   >
-                    <rect width='20' height='14' x='2' y='5' rx='2' />
-                    <path d='M2 10h20' />
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className='text-2xl font-bold'>+12,234</div>
+                  <div className='text-2xl font-bold'>1.2s</div>
                   <p className='text-muted-foreground text-xs'>
-                    +19% from last month
+                    -0.3s from last month
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                   <CardTitle className='text-sm font-medium'>
-                    Active Now
+                    User Satisfaction
                   </CardTitle>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
@@ -149,13 +150,13 @@ export default function Dashboard() {
                     strokeWidth='2'
                     className='text-muted-foreground h-4 w-4'
                   >
-                    <path d='M22 12h-4l-3 9L9 3l-3 9H2' />
+                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className='text-2xl font-bold'>+573</div>
+                  <div className='text-2xl font-bold'>4.8/5</div>
                   <p className='text-muted-foreground text-xs'>
-                    +201 since last hour
+                    +0.3 since last month
                   </p>
                 </CardContent>
               </Card>
@@ -163,21 +164,48 @@ export default function Dashboard() {
             <div className='grid grid-cols-1 gap-4 lg:grid-cols-7'>
               <Card className='col-span-1 lg:col-span-4'>
                 <CardHeader>
-                  <CardTitle>Overview</CardTitle>
+                  <CardTitle>Voice Activity Trends</CardTitle>
+                  <CardDescription>
+                    Daily voice interactions over the past 30 days
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className='pl-2'>
-                  <Overview />
+                  <VoiceActivityChart />
                 </CardContent>
               </Card>
               <Card className='col-span-1 lg:col-span-3'>
                 <CardHeader>
-                  <CardTitle>Recent Sales</CardTitle>
+                  <CardTitle>Recent Interactions</CardTitle>
                   <CardDescription>
-                    You made 265 sales this month.
+                    Last 10 user voice interactions
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RecentSales />
+                  <RecentInteractions />
+                </CardContent>
+              </Card>
+            </div>
+            <div className='grid grid-cols-1 gap-4 lg:grid-cols-2'>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recognition Accuracy</CardTitle>
+                  <CardDescription>
+                    By language and accent type
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AccuracyGauge />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Popular Voice Commands</CardTitle>
+                  <CardDescription>
+                    Most frequently used phrases this month
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PopularPhrases />
                 </CardContent>
               </Card>
             </div>
@@ -187,30 +215,3 @@ export default function Dashboard() {
     </>
   )
 }
-
-const topNav = [
-  {
-    title: 'Overview',
-    href: 'dashboard/overview',
-    isActive: true,
-    disabled: false,
-  },
-  {
-    title: 'Customers',
-    href: 'dashboard/customers',
-    isActive: false,
-    disabled: true,
-  },
-  {
-    title: 'Products',
-    href: 'dashboard/products',
-    isActive: false,
-    disabled: true,
-  },
-  {
-    title: 'Settings',
-    href: 'dashboard/settings',
-    isActive: false,
-    disabled: true,
-  },
-]

@@ -1,6 +1,6 @@
 import {
   // IconBarrierBlock,
-  IconBrowserCheck,
+  // IconBrowserCheck,
   // IconBug,
   IconChecklist,
   // IconError404,
@@ -8,13 +8,13 @@ import {
   IconLayoutDashboard,
   // IconLock,
   // IconLockAccess,
-  IconNotification,
+  // IconNotification,
   // IconPackages,
-  IconPalette,
+  // IconPalette,
   // IconServerOff,
   IconSettings,
-  IconTool,
-  IconUserCog,
+  // IconTool,
+  IconAi
   // IconUserOff,
 } from '@tabler/icons-react'
 import {
@@ -149,30 +149,30 @@ export const sidebarData: SidebarData = {
           icon: IconSettings,
           items: [
             {
-              title: 'Profile',
+              title: 'llm',
               url: '/settings',
-              icon: IconUserCog,
+              icon: IconAi,
             },
-            {
-              title: 'Account',
-              url: '/settings/account',
-              icon: IconTool,
-            },
-            {
-              title: 'Appearance',
-              url: '/settings/appearance',
-              icon: IconPalette,
-            },
-            {
-              title: 'Notifications',
-              url: '/settings/notifications',
-              icon: IconNotification,
-            },
-            {
-              title: 'Display',
-              url: '/settings/display',
-              icon: IconBrowserCheck,
-            },
+            // {
+            //   title: 'Account',
+            //   url: '/settings/account',
+            //   icon: IconTool,
+            // },
+            // {
+            //   title: 'Appearance',
+            //   url: '/settings/appearance',
+            //   icon: IconPalette,
+            // },
+            // {
+            //   title: 'Notifications',
+            //   url: '/settings/notifications',
+            //   icon: IconNotification,
+            // },
+            // {
+            //   title: 'Display',
+            //   url: '/settings/display',
+            //   icon: IconBrowserCheck,
+            // },
           ],
         },
         {

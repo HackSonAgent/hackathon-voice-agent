@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { IconPlanet } from '@tabler/icons-react'
-
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
+import { ThemeSwitch } from '@/components/theme-switch'
 // Define TypeScript interfaces
 interface SpaceFact {
   title: string;
@@ -64,6 +68,18 @@ export default function ComingSoon() {
   }, []);
 
   return (
+    <>
+      {/* ===== Top Heading ===== */}
+          <Header>
+            <Search />
+            <div className='ml-auto flex items-center gap-4'>
+              <ThemeSwitch />
+              <ProfileDropdown />
+            </div>
+          </Header>
+    
+          {/* ===== Content ===== */}
+          <Main fixed>
     <div className='h-svh'>
       <div className='m-auto flex h-full w-full flex-col items-center justify-center gap-4'>
         <IconPlanet size={72} className="text-blue-500 animate-pulse" />
@@ -113,15 +129,13 @@ export default function ComingSoon() {
                 ))}
               </ul>
             </div>
-            <p className='text-muted-foreground text-center mt-4'>
-              Our cosmic developers are working tirelessly. <br />
-              Stay tuned for the grand unveiling!
-            </p>
           </>
         ) : (
           <p>No data available</p>
         )}
       </div>
     </div>
+    </Main>
+    </>
   )
 }
