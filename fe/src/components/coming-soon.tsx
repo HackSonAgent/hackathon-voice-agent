@@ -67,6 +67,18 @@ export default function ComingSoon() {
     getData();
   }, []);
 
+
+  useEffect(()=>{
+
+    const getData = async ()=>{
+      const response = await fetch('https://2do1mkam6i.execute-api.us-west-2.amazonaws.com/v1/conversations');
+      console.log(response)
+    }
+
+    getData()
+
+  })
+
   return (
     <>
       {/* ===== Top Heading ===== */}

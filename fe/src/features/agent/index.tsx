@@ -4,7 +4,7 @@ import { Main } from '@/components/layout/main';
 import { ProfileDropdown } from '@/components/profile-dropdown';
 import { Search } from '@/components/search';
 import { ThemeSwitch } from '@/components/theme-switch';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -73,7 +73,8 @@ const ChatMessage = ({ content, sender, timestamp }: ChatMessageProps) => {
     )}>
       {!isUser && (
         <Avatar className="h-6 w-6 md:h-8 md:w-8 flex-shrink-0">
-          <div className="bg-primary text-primary-foreground flex h-full w-full items-center justify-center rounded-full text-xs md:text-sm">AI</div>
+          <AvatarImage src='https://images.unsplash.com/photo-1527842891421-42eec6e703ea?q=80&w=2487&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' alt='luna' />
+          {/* <div className="bg-primary text-primary-foreground flex h-full w-full items-center justify-center rounded-full text-xs md:text-sm">Luna</div> */}
         </Avatar>
       )}
       
