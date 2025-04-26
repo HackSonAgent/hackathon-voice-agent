@@ -1,87 +1,87 @@
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 
-// List of common voice queries for our fake data
-const commonQueries = [
-  "What's the weather forecast?",
-  "Set a timer for 10 minutes",
-  "Play my favorite playlist",
-  "Call Mom",
-  "Send a message to John",
-  "What's on my calendar today?",
-  "Tell me a joke",
-  "What time is it in Tokyo?",
-  "Read my notifications",
-  "How do I get to the nearest grocery store?",
-  "What's the news today?",
-  "Turn on the living room lights",
-  "Add milk to my shopping list"
+// List of product-related actions based on actual products
+const commonActions = [
+  "搜尋關節保健產品",
+  "加入鴕鳥龜鹿精到購物車",
+  "比較不同葉黃素產品",
+  "瀏覽體重管理商品",
+  "將葉黃素滋養倍效膠囊加入願望清單",
+  "查看關節保健產品評價",
+  "購買完美動能極孅果膠",
+  "閱讀鴕鳥龜鹿精說明書",
+  "搜尋銀髮族保健產品",
+  "加入關節靈活配方到購物車",
+  "查看眼睛保健產品",
+  "比較不同體重管理產品",
+  "瀏覽保健食品促銷"
 ];
 
 // Possible user names for our fake data
 const userNames = [
-  "Alex Thompson",
-  "Jamie Rodriguez",
-  "Taylor Kim",
-  "Jordan Smith",
-  "Casey Johnson",
-  "Morgan Williams",
-  "Riley Davis",
-  "Avery Martinez",
-  "Skyler Anderson",
-  "Quinn Garcia"
+  "王小明",
+  "林美麗",
+  "張大華",
+  "李雅婷",
+  "陳志明",
+  "黃淑芬",
+  "吳建志",
+  "蔡佳玲",
+  "鄭明傑",
+  "謝雅惠"
 ];
 
 // Generate fake interaction data
 const generateInteractions = (count = 10) => {
   const interactions = [];
-  const now = Date.now() ;
-  
+  const now = Date.now();
+
   for (let i = 0; i < count; i++) {
     const minutesAgo = i * Math.floor(Math.random() * 15 + 5);
     const timestamp = new Date(now - minutesAgo * 60000) as unknown as number;
-    
-    const succeeded = Math.random() > 0.15; // 85% success rate
-    
+
+    const purchased = Math.random() > 0.75; // 25% purchase rate
+
     interactions.push({
       id: i + 1,
       userName: userNames[Math.floor(Math.random() * userNames.length)],
-      query: commonQueries[Math.floor(Math.random() * commonQueries.length)],
+      action: commonActions[Math.floor(Math.random() * commonActions.length)],
       timestamp: timestamp,
-      succeeded: succeeded,
-      responseTime: succeeded ? (Math.random() * 1.5 + 0.5).toFixed(1) : null // 0.5-2.0s
+      purchased: purchased,
+      decisionTime: (Math.random() * 2.5 + 1.0).toFixed(1) // 1.0-3.5s
     });
   }
-  
+
   return interactions;
 };
 
 export function RecentInteractions() {
   const interactions = generateInteractions();
-  
+
   // Format timestamp to display how long ago
   const formatTimeAgo = (timestamp: number) => {
     const now = Date.now()
     const diffMs = now - timestamp;
     const diffMins = Math.floor(diffMs / 60000);
-    
+
     if (diffMins < 1) {
-      return 'Just now';
+      return '剛剛';
     } else if (diffMins === 1) {
-      return '1 minute ago';
+      return '1 分鐘前';
     } else if (diffMins < 60) {
-      return `${diffMins} minutes ago`;
+      return `${diffMins} 分鐘前`;
     } else {
       const diffHours = Math.floor(diffMins / 60);
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      return `${diffHours} 小時前`;
     }
   };
-  
+
   return (
     <div className="space-y-4">
       {interactions.map((interaction) => (
         <div key={interaction.id} className="flex items-center space-x-4">
-          <Avatar className="h-8 w-8 bg-primary/10 flex justify-center  items-center">
+          <Avatar className="h-8 w-8 bg-primary/10 flex justify-center items-center">
             <span className="text-xs font-medium">
               {interaction.userName.split(' ').map(name => name[0]).join('')}
             </span>
@@ -91,20 +91,20 @@ export function RecentInteractions() {
               <p className="text-sm font-medium">{interaction.userName}</p>
               <span className="text-xs text-muted-foreground">{formatTimeAgo(interaction.timestamp)}</span>
             </div>
-            <p className="text-sm text-muted-foreground">"{interaction.query}"</p>
+            <p className="text-sm text-muted-foreground">"{interaction.action}"</p>
             <div className="flex items-center gap-2">
-              {interaction.succeeded ? (
+              {interaction.purchased ? (
                 <>
                   <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    Success
+                    已購買
                   </Badge>
                   <span className="text-xs text-muted-foreground">
-                    Response: {interaction.responseTime}s
+                    決策時間: {interaction.decisionTime}s
                   </span>
                 </>
               ) : (
-                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                  Failed
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                  瀏覽中
                 </Badge>
               )}
             </div>

@@ -79,7 +79,7 @@ type LLMConfigValues = z.infer<typeof llmConfigSchema>
 
 // 確保所有必須欄位都有默認值
 const defaultValues: LLMConfigValues = {
-  model: "gpt-4-turbo",
+  model: "Claude 3.7 Sonnet",
   temperature: 0.7,
   top_p: 1.0,
   max_tokens: 2048,
@@ -91,6 +91,18 @@ const defaultValues: LLMConfigValues = {
   save_history: true,
   config_name: "我的預設配置"
 }
+const claudeModels = [
+  "Claude 3.7 Sonnet",
+  "Claude 3.5 Haiku",
+  "Claude 3.5 Sonnet v2",
+  "Claude 3.5 Sonnet",
+  "Claude 3 Opus",
+  "Claude 3 Sonnet",
+  "Claude 3 Haiku",
+  "Claude 2.1",
+  "Claude",
+  "Claude Instant"
+];
 
 export default function LLMConfigForm() {
   // 修正: 確保泛型參數與 zod schema 匹配
@@ -143,14 +155,9 @@ export default function LLMConfigForm() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value='gpt-4-turbo'>GPT-4 Turbo</SelectItem>
-                            <SelectItem value='gpt-4'>GPT-4</SelectItem>
-                            <SelectItem value='gpt-3.5-turbo'>GPT-3.5 Turbo</SelectItem>
-                            <SelectItem value='claude-3-opus'>Claude 3 Opus</SelectItem>
-                            <SelectItem value='claude-3-sonnet'>Claude 3 Sonnet</SelectItem>
-                            <SelectItem value='claude-3-haiku'>Claude 3 Haiku</SelectItem>
-                            <SelectItem value='llama-3-70b'>Llama 3 70B</SelectItem>
-                            <SelectItem value='llama-3-8b'>Llama 3 8B</SelectItem>
+                            {
+                              claudeModels.map((item, idx) => <SelectItem key={idx} value={item}>{item}</SelectItem>)
+                            }
                           </SelectContent>
                         </Select>
                         <FormDescription>

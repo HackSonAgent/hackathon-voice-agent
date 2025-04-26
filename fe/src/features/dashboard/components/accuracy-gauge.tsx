@@ -12,17 +12,15 @@ interface ProcessedAccuracyItem extends AccuracyItem {
   remainder: number;
 }
 
-
-
-// Fake data for accuracy by language/accent
+// Data for accuracy by product category based on actual products
 const accuracyData: AccuracyItem[] = [
-  { name: 'US English', value: 96.8, color: '#4caf50' },
-  { name: 'British English', value: 95.2, color: '#8bc34a' },
-  { name: 'Australian English', value: 94.5, color: '#cddc39' },
-  { name: 'Indian English', value: 90.7, color: '#ffeb3b' },
-  { name: 'Spanish Accent', value: 88.3, color: '#ffc107' },
-  { name: 'Chinese Accent', value: 85.6, color: '#ff9800' },
-  { name: 'French Accent', value: 87.1, color: '#ff5722' }
+  { name: '關節保健 - 活動族群', value: 96.8, color: '#4caf50' },
+  { name: '關節保健 - 銀髮族', value: 95.2, color: '#8bc34a' },
+  { name: '眼睛保健 - 上班族', value: 94.5, color: '#2196f3' },
+  { name: '眼睛保健 - 銀髮族', value: 90.7, color: '#64b5f6' },
+  { name: '體重管理 - 年輕族群', value: 88.3, color: '#ff9800' },
+  { name: '體重管理 - 熟齡族群', value: 85.6, color: '#ffb74d' },
+  { name: '綜合保健 - 全家適用', value: 87.1, color: '#9c27b0' }
 ];
 
 // Process data for the radial chart
@@ -61,11 +59,11 @@ export function AccuracyGauge() {
     if (active && payload && payload.length) {
       // Only show tooltip for the accuracy values, not the remainder
       if (payload[0].name === 'remainder') return null;
-      
+
       return (
         <div className="bg-white p-2 border rounded shadow-sm">
           <p className="font-medium">{payload[0].payload.name}</p>
-          <p className="text-sm">{`Accuracy: ${payload[0].value.toFixed(1)}%`}</p>
+          <p className="text-sm">{`推薦準確度: ${payload[0].value.toFixed(1)}%`}</p>
         </div>
       );
     }
@@ -76,7 +74,7 @@ export function AccuracyGauge() {
   const CustomLegend: React.FC<CustomLegendProps> = ({ payload }) => {
     // Filter out the remainder entries
     const filteredPayload = payload?.filter(entry => entry.value !== 'remainder') || [];
-    
+
     return (
       <div className="grid grid-cols-2 gap-2 mt-4 text-sm">
         {filteredPayload.map((entry, index) => (
@@ -122,7 +120,7 @@ export function AccuracyGauge() {
           <Tooltip content={<CustomTooltip />} />
         </PieChart>
       </ResponsiveContainer>
-      
+
       <CustomLegend payload={accuracyData.map(item => ({
         value: item.name,
         color: item.color

@@ -12,12 +12,12 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { VoiceActivityChart } from './components/voice-activity-chart'
-import { RecentInteractions } from './components/recent-interactions'
-import { AccuracyGauge } from './components/accuracy-gauge'
-import { PopularPhrases } from './components/popular-phrases'
+import { VoiceActivityChart as ShoppingActivityChart } from './components/voice-activity-chart'
+import { RecentInteractions as RecentShoppingInteractions } from './components/recent-interactions'
+import { AccuracyGauge as ProductAccuracyGauge } from './components/accuracy-gauge'
+import { PopularPhrases as PopularProducts } from './components/popular-phrases'
 
-export default function VoiceAgentDashboard() {
+export default function HealthProductsRecommendationDashboard() {
   return (
     <>
       {/* ===== Top Heading ===== */}
@@ -31,9 +31,9 @@ export default function VoiceAgentDashboard() {
       {/* ===== Main ===== */}
       <Main>
         <div className='mb-2 flex items-center justify-between space-y-2'>
-          <h1 className='text-2xl font-bold tracking-tight'>Voice Agent Analytics</h1>
+          <h1 className='text-2xl font-bold tracking-tight'>健康保健商品推薦分析</h1>
           <div className='flex items-center space-x-2'>
-            <Button>Export Report</Button>
+            <Button>匯出報表</Button>
           </div>
         </div>
         <Tabs
@@ -43,15 +43,15 @@ export default function VoiceAgentDashboard() {
         >
           <div className='w-full overflow-x-auto pb-2'>
             <TabsList>
-              <TabsTrigger value='overview'>Overview</TabsTrigger>
+              <TabsTrigger value='overview'>總覽</TabsTrigger>
               <TabsTrigger value='voice-performance' disabled>
-                Voice Performance
+                產品表現
               </TabsTrigger>
               <TabsTrigger value='user-interactions' disabled>
-                User Interactions
+                用戶行為
               </TabsTrigger>
               <TabsTrigger value='voice-settings' disabled>
-                Voice Settings
+                Agent 設定
               </TabsTrigger>
             </TabsList>
           </div>
@@ -60,7 +60,7 @@ export default function VoiceAgentDashboard() {
               <Card>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                   <CardTitle className='text-sm font-medium'>
-                    Processed Calls
+                    互動總數
                   </CardTitle>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
@@ -78,14 +78,14 @@ export default function VoiceAgentDashboard() {
                 <CardContent>
                   <div className='text-2xl font-bold'>12,546</div>
                   <p className='text-muted-foreground text-xs'>
-                    +23.4% from last month
+                    +23.4% 相較於上個月
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                   <CardTitle className='text-sm font-medium'>
-                    Recognition Accuracy
+                    推薦準確率
                   </CardTitle>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
@@ -107,13 +107,13 @@ export default function VoiceAgentDashboard() {
                 <CardContent>
                   <div className='text-2xl font-bold'>94.7%</div>
                   <p className='text-muted-foreground text-xs'>
-                    +2.3% from last month
+                    +2.3% 相較於上個月
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>Average Response Time</CardTitle>
+                  <CardTitle className='text-sm font-medium'>平均決策時間</CardTitle>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
                     viewBox='0 0 24 24'
@@ -131,14 +131,14 @@ export default function VoiceAgentDashboard() {
                 <CardContent>
                   <div className='text-2xl font-bold'>1.2s</div>
                   <p className='text-muted-foreground text-xs'>
-                    -0.3s from last month
+                    -0.3s 相較於上個月
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                   <CardTitle className='text-sm font-medium'>
-                    User Satisfaction
+                    轉換率
                   </CardTitle>
                   <svg
                     xmlns='http://www.w3.org/2000/svg'
@@ -154,9 +154,9 @@ export default function VoiceAgentDashboard() {
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className='text-2xl font-bold'>4.8/5</div>
+                  <div className='text-2xl font-bold'>25.6%</div>
                   <p className='text-muted-foreground text-xs'>
-                    +0.3 since last month
+                    +3.5% 相較於上個月
                   </p>
                 </CardContent>
               </Card>
@@ -164,48 +164,48 @@ export default function VoiceAgentDashboard() {
             <div className='grid grid-cols-1 gap-4 lg:grid-cols-7'>
               <Card className='col-span-1 lg:col-span-4'>
                 <CardHeader>
-                  <CardTitle>Voice Activity Trends</CardTitle>
+                  <CardTitle>保健產品瀏覽趨勢</CardTitle>
                   <CardDescription>
-                    Daily voice interactions over the past 30 days
+                    過去 30 天的用戶互動數據
                   </CardDescription>
                 </CardHeader>
                 <CardContent className='pl-2'>
-                  <VoiceActivityChart />
+                  <ShoppingActivityChart />
                 </CardContent>
               </Card>
               <Card className='col-span-1 lg:col-span-3'>
                 <CardHeader>
-                  <CardTitle>Recent Interactions</CardTitle>
+                  <CardTitle>最近互動</CardTitle>
                   <CardDescription>
-                    Last 10 user voice interactions
+                    最近 10 筆用戶保健商品互動
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RecentInteractions />
+                  <RecentShoppingInteractions />
                 </CardContent>
               </Card>
             </div>
             <div className='grid grid-cols-1 gap-4 lg:grid-cols-2'>
               <Card>
                 <CardHeader>
-                  <CardTitle>Recognition Accuracy</CardTitle>
+                  <CardTitle>產品推薦準確度</CardTitle>
                   <CardDescription>
-                    By language and accent type
+                    根據產品類別與用戶族群
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <AccuracyGauge />
+                  <ProductAccuracyGauge />
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader>
-                  <CardTitle>Popular Voice Commands</CardTitle>
+                  <CardTitle>熱門保健產品</CardTitle>
                   <CardDescription>
-                    Most frequently used phrases this month
+                    本月最常被推薦的保健商品
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <PopularPhrases />
+                  <PopularProducts />
                 </CardContent>
               </Card>
             </div>
@@ -214,4 +214,5 @@ export default function VoiceAgentDashboard() {
       </Main>
     </>
   )
+
 }

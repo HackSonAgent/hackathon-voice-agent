@@ -2,8 +2,8 @@ import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 // Define interfaces for our data structures
-interface PhraseData {
-  phrase: string;
+interface ProductData {
+  product: string;
   count: number;
   category: string;
 }
@@ -13,98 +13,96 @@ interface CategoryColorMap {
   [key: string]: string;
 }
 
-// Fake data for popular voice commands
-const popularPhrasesData: PhraseData[] = [
+// Data for popular product recommendations based on actual products
+const popularProductsData: ProductData[] = [
   {
-    phrase: "Weather forecast",
+    product: "鴕鳥龜鹿精",
     count: 2184,
-    category: "Information"
+    category: "關節保健"
   },
   {
-    phrase: "Play music",
+    product: "葉黃素滋養倍效膠囊",
     count: 1953,
-    category: "Entertainment"
+    category: "眼睛保健"
   },
   {
-    phrase: "Set timer",
+    product: "完美動能極孅果膠",
     count: 1679,
-    category: "Utility"
+    category: "體重管理"
   },
   {
-    phrase: "Call contact",
+    product: "關節靈活配方",
     count: 1425,
-    category: "Communication"
+    category: "關節保健"
   },
   {
-    phrase: "Turn on lights",
+    product: "護眼藍光配方",
     count: 1321,
-    category: "Smart Home"
+    category: "眼睛保健"
   },
   {
-    phrase: "Add to shopping list",
+    product: "腸道蠕動膳食纖維",
     count: 1106,
-    category: "Utility"
+    category: "體重管理"
   },
   {
-    phrase: "Tell me a joke",
+    product: "補腎壯骨配方",
     count: 987,
-    category: "Entertainment"
+    category: "關節保健"
   },
   {
-    phrase: "News updates",
+    product: "夜視能量配方",
     count: 854,
-    category: "Information"
+    category: "眼睛保健"
   },
   {
-    phrase: "Send message",
+    product: "代謝提升配方",
     count: 743,
-    category: "Communication"
+    category: "體重管理"
   },
   {
-    phrase: "Set alarm",
+    product: "銀髮活力套組",
     count: 689,
-    category: "Utility"
+    category: "關節保健"
   }
 ].sort((a, b) => b.count - a.count);
 
 // Category color mapping
 const categoryColors: CategoryColorMap = {
-  "Information": "#2196f3",
-  "Entertainment": "#9c27b0",
-  "Utility": "#ff9800",
-  "Communication": "#4caf50",
-  "Smart Home": "#f44336"
+  "關節保健": "#4caf50",
+  "眼睛保健": "#2196f3",
+  "體重管理": "#ff9800"
 };
 
 // Define the interface for our custom tooltip props
 interface CustomTooltipProps {
   active?: boolean;
   payload?: Array<{
-    payload: PhraseData;
+    payload: ProductData;
     value: number;
     dataKey: string;
   }>;
   label?: string;
 }
 
-export function PopularPhrases(){
+export function PopularPhrases() {
   // Format large numbers
-  const formatNumber = (number: number): string  => {
+  const formatNumber = (number: number): string => {
     if (number >= 1000) {
       return `${(number / 1000).toFixed(1)}k`;
     }
-    return number +'';
+    return number + '';
   };
-  
+
   // Custom tooltip
   const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
         <div className="bg-white p-3 border rounded shadow-sm">
-          <p className="font-medium">{data.phrase}</p>
-          <p className="text-sm text-muted-foreground">Category: {data.category}</p>
-          <p className="text-sm font-semibold">{data.count.toLocaleString()} requests</p>
+          <p className="font-medium">{data.product}</p>
+          <p className="text-sm text-muted-foreground">類別: {data.category}</p>
+          <p className="text-sm font-semibold">{data.count.toLocaleString()} 推薦次數</p>
         </div>
       );
     }
@@ -115,7 +113,7 @@ export function PopularPhrases(){
     <div className="space-y-6">
       <ResponsiveContainer width="100%" height={300}>
         <BarChart
-          data={popularPhrasesData}
+          data={popularProductsData}
           layout="vertical"
           margin={{
             top: 5,
@@ -126,25 +124,25 @@ export function PopularPhrases(){
         >
           <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.15} />
           <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={formatNumber} />
-          <YAxis 
-            dataKey="phrase" 
-            type="category" 
-            tick={{ fontSize: 12 }} 
+          <YAxis
+            dataKey="product"
+            type="category"
+            tick={{ fontSize: 12 }}
             width={90}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Bar 
+          <Bar
             dataKey="count"
-            radius={[0, 4, 4, 0]} 
+            radius={[0, 4, 4, 0]}
             barSize={20}
           >
-            {popularPhrasesData.map((entry, index) => (
+            {popularProductsData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={categoryColors[entry.category]} />
             ))}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-      
+
       {/* Category Legend */}
       <div className="grid grid-cols-2 gap-2">
         {Object.entries(categoryColors).map(([category, color]) => (
