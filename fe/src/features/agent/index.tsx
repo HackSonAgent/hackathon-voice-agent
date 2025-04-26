@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { useState } from 'react';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
@@ -12,60 +13,39 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Mic } from 'lucide-react';
 import { VoiceDialog } from './components/voice-dialog';
+import { MessageResponse, sendMessage } from '@/services/api';
+import { Loader2 } from 'lucide-react';
 
-// Define TypeScript interfaces
+// 整合 API 響應的訊息界面
 interface Message {
-  id: number;
+  id: string;
   content: string;
   sender: 'user' | 'ai';
   timestamp: string;
+  voice?: string;
 }
 
-// Mock data for our chat
-const mockMessages: Message[] = [
-  {
-    id: 1,
-    content: "Hello! How can I assist you today?",
-    sender: "ai",
-    timestamp: "10:30 AM"
-  },
-  {
-    id: 2,
-    content: "I need help setting up my voice assistant.",
-    sender: "user",
-    timestamp: "10:31 AM"
-  },
-  {
-    id: 3,
-    content: "I'd be happy to help with that! What specifically are you having trouble with?",
-    sender: "ai",
-    timestamp: "10:31 AM"
-  },
-  {
-    id: 4,
-    content: "I can't seem to get the wake word recognition working properly.",
-    sender: "user",
-    timestamp: "10:32 AM"
-  },
-  {
-    id: 5,
-    content: "Let's troubleshoot that. First, make sure your microphone is properly connected and has the right permissions enabled.",
-    sender: "ai",
-    timestamp: "10:33 AM"
-  }
-];
-
-// Message component to render each chat message
+// 訊息組件
 interface ChatMessageProps {
-  id: number;
+  id: string;
   content: string;
   sender: 'user' | 'ai';
   timestamp: string;
+  voice?: string;
 }
 
-const ChatMessage = ({ content, sender, timestamp }: ChatMessageProps) => {
+const ChatMessage = ({ content, sender, timestamp, voice }: ChatMessageProps) => {
   const isUser = sender === 'user';
-  
+
+  // 處理語音播放
+  const handlePlayVoice = () => {
+    if (voice) {
+      // 創建一個音頻元素來播放語音
+      const audio = new Audio(voice);
+      audio.play().catch(error => console.error('播放語音失敗:', error));
+    }
+  };
+
   return (
     <div className={cn(
       "flex w-full mb-2 md:mb-4 gap-1 md:gap-2",
@@ -73,11 +53,10 @@ const ChatMessage = ({ content, sender, timestamp }: ChatMessageProps) => {
     )}>
       {!isUser && (
         <Avatar className="h-6 w-6 md:h-8 md:w-8 flex-shrink-0">
-          <AvatarImage src='https://images.unsplash.com/photo-1527842891421-42eec6e703ea?q=80&w=2487&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' alt='luna' />
-          {/* <div className="bg-primary text-primary-foreground flex h-full w-full items-center justify-center rounded-full text-xs md:text-sm">Luna</div> */}
+          <AvatarImage src='https://images.unsplash.com/photo-1501523321-8ecb927b4be6?q=80&w=2360&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' alt='Luna' />
         </Avatar>
       )}
-      
+
       <div className={cn(
         "flex flex-col max-w-[75%] sm:max-w-[80%]",
         isUser ? "items-end" : "items-start"
@@ -87,10 +66,32 @@ const ChatMessage = ({ content, sender, timestamp }: ChatMessageProps) => {
           isUser ? "bg-primary text-primary-foreground" : "bg-muted"
         )}>
           {content}
+          {voice && !isUser && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-2 h-6 w-6 p-0"
+              onClick={handlePlayVoice}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+              >
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span className="sr-only">播放語音</span>
+            </Button>
+          )}
         </div>
         <span className="text-xs text-muted-foreground mt-0.5 md:mt-1">{timestamp}</span>
       </div>
-      
+
       {isUser && (
         <Avatar className="h-6 w-6 md:h-8 md:w-8 flex-shrink-0">
           <div className="bg-secondary text-secondary-foreground flex h-full w-full items-center justify-center rounded-full text-xs md:text-sm">You</div>
@@ -101,37 +102,66 @@ const ChatMessage = ({ content, sender, timestamp }: ChatMessageProps) => {
 };
 
 export default function ChatBoard() {
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
   const [isVoiceDialogOpen, setIsVoiceDialogOpen] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+
+  // 格式化時間戳
+  const formatTimestamp = (isoString: string): string => {
+    try {
+      const date = new Date(isoString);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      console.error('時間格式化錯誤:', e);
+      return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+  };
+
+  // 處理發送訊息
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || isLoading) return;
 
-    const now = new Date();
-    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    const message = {
-      id: messages.length + 1,
-      content: newMessage,
-      sender: "user" as const,
-      timestamp: timeString
-    };
+    setIsLoading(true);
+    setError(null);
 
-    setMessages([...messages, message]);
-    setNewMessage("");
-    
-    // Simulate AI response after a short delay
-    setTimeout(() => {
-      const aiResponse = {
-        id: messages.length + 2,
-        content: "I'm processing your request. How else can I help you?",
-        sender: "ai" as const,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, aiResponse]);
-    }, 1000);
+    const messageContent = newMessage;
+    setNewMessage(""); // 立即清空輸入框
+
+    try {
+      // 發送訊息到 API
+      const response = await sendMessage(messageContent);
+
+
+      // API 返回用戶訊息和 AI 回應的陣列
+      const newMessages = response.map((msg: MessageResponse) => {
+        const sender = msg.username === "0000" ? "ai" : "user" as 'user'| 'ai'
+        const timestamp = formatTimestamp(msg.createdAt);
+
+        return {
+          id: msg.id,
+          content: msg.content,
+          sender,
+          timestamp,
+          voice: msg.voice
+        };
+
+      });
+
+
+      // 將新訊息添加到界面
+      setMessages(prev => [...prev, ...newMessages]);
+    } catch (err) {
+      console.error('發送訊息錯誤:', err);
+      setError("發送訊息失敗。請檢查網絡連接並重試。");
+      // 還原輸入框中的訊息，讓用戶可以重試
+      setNewMessage(messageContent);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleVoiceButtonClick = () => {
@@ -157,47 +187,77 @@ export default function ChatBoard() {
       {/* ===== Main ===== */}
       <Main className="px-2 sm:px-4 md:px-6">
         <div className='mb-2 md:mb-4 flex items-center justify-between'>
-          <h1 className='text-xl md:text-2xl font-bold tracking-tight'>Voice Agent</h1>
+          <h1 className='text-xl md:text-2xl font-bold tracking-tight'>Luna 智能銷售</h1>
         </div>
-        
+
         {/* Chat Container */}
         <Card className="flex flex-col h-[calc(100vh-10rem)] sm:h-[calc(100vh-11rem)] md:h-[calc(100vh-12rem)]">
           {/* Message Container */}
           <ScrollArea className="flex-1 p-2 md:p-4">
+            {messages.length === 0 && !isLoading && !error && (
+              <div className="flex justify-center items-center h-full text-muted-foreground">
+                開始與 Luna 對話，獲取商品推薦
+              </div>
+            )}
+
+            {error && (
+              <div className="m-4 p-4 bg-destructive/10 text-destructive rounded-md">
+                <p>{error}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => window.location.reload()}
+                >
+                  重新加載
+                </Button>
+              </div>
+            )}
+
             {messages.map((message) => (
-              <ChatMessage 
-                key={message.id} 
+              message.content && <ChatMessage
+                key={message.id}
                 id={message.id}
                 content={message.content}
                 sender={message.sender}
                 timestamp={message.timestamp}
+                voice={message.voice}
               />
             ))}
+
+            {isLoading && (
+              <div className="flex justify-center items-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            )}
           </ScrollArea>
-          
+
           {/* Message Input */}
           <div className="p-2 md:p-4 border-t">
             <form onSubmit={handleSendMessage} className="flex gap-1 md:gap-2">
               <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
+                placeholder="輸入您的問題或需求..."
                 className="flex-1 text-sm md:text-base"
+                disabled={isLoading}
               />
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 size="icon"
                 className="h-9 w-9 md:h-10 md:w-10"
                 onClick={handleVoiceButtonClick}
+                disabled={isLoading}
               >
                 <Mic className="h-4 w-4" />
               </Button>
-              <Button 
+              <Button
                 type="submit"
                 className="text-sm md:text-base px-2 md:px-4"
+                disabled={isLoading || !newMessage.trim()}
               >
-                Send
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "發送"}
               </Button>
             </form>
           </div>

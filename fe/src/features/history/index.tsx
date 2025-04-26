@@ -101,7 +101,7 @@ export default function ChatHistoryPage() {
 			{/* ===== Main ===== */}
 			<Main>
 				<div className='mb-2 flex items-center justify-between space-y-2'>
-					<h1 className='text-2xl font-bold tracking-tight'>購物助理對話歷史</h1>
+					<h1 className='text-2xl font-bold tracking-tight'>銷售助理對話歷史</h1>
 					<div className='flex items-center space-x-2'>
 						<Select value={timeRange} onValueChange={setTimeRange}>
 							<SelectTrigger className="w-[180px]">

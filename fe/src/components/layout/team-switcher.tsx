@@ -56,7 +56,7 @@ export function AssistantSwitcher({
             sideOffset={4}
           >
             <DropdownMenuLabel className='text-muted-foreground text-xs'>
-              購物助理
+              銷售助理
             </DropdownMenuLabel>
             {assistants.map((assistant, index) => (
               <DropdownMenuItem

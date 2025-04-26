@@ -37,7 +37,7 @@ export const sidebarData: SidebarData = {
     {
       name: 'Luna',
       logo: MoonStar,
-      mode: 'Sales Agent Mode',
+      mode: 'Sales Assistant',
     },
     {
       name: 'Shopper',
