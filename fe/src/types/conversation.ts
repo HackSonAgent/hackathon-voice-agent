@@ -13,11 +13,11 @@ export interface UIConversation extends Omit<ConversationResponse, 'id'> {
 }
 
 export interface UIMessage {
-  role: 'user' | 'assistant';
+  role: 'assistant' | 'user';
   content: string;
-  products?: UIProduct[];
+  products?: string[];
+  createdAt?: string;
 }
-
 export interface UIProduct {
   id: string;
   name: string;

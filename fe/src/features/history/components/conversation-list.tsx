@@ -67,7 +67,7 @@ export function ConversationList({
 									</div>
 									{chat.messages.length > 0 && (
 										<div className='mt-1 truncate text-sm opacity-80'>
-											{chat.messages[0].content.substring(0, 40)}...
+											{chat.messages[0].content? chat.messages[0].content.substring(0, 40) : '未命名'}...
 										</div>
 									)}
 									<div className='mt-2 flex flex-wrap gap-1'>
