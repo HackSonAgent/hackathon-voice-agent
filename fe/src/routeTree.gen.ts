@@ -18,6 +18,7 @@ import { Route as AuthenticatedIndexImport } from './routes/_authenticated/index
 import { Route as authSignInImport } from './routes/(auth)/sign-in'
 import { Route as authOtpImport } from './routes/(auth)/otp'
 import { Route as auth500Import } from './routes/(auth)/500'
+import { Route as AuthenticatedHistoryIndexImport } from './routes/_authenticated/history/index'
 
 // Create Virtual Routes
 
@@ -226,6 +227,12 @@ const AuthenticatedAgentIndexLazyRoute =
     import('./routes/_authenticated/agent/index.lazy').then((d) => d.Route),
   )
 
+const AuthenticatedHistoryIndexRoute = AuthenticatedHistoryIndexImport.update({
+  id: '/history/',
+  path: '/history/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+
 const AuthenticatedSettingsNotificationsLazyRoute =
   AuthenticatedSettingsNotificationsLazyImport.update({
     id: '/notifications',
@@ -400,6 +407,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsNotificationsLazyImport
       parentRoute: typeof AuthenticatedSettingsRouteLazyImport
     }
+    '/_authenticated/history/': {
+      id: '/_authenticated/history/'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AuthenticatedHistoryIndexImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
     '/_authenticated/agent/': {
       id: '/_authenticated/agent/'
       path: '/agent'
@@ -476,6 +490,7 @@ const AuthenticatedSettingsRouteLazyRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteLazyRoute: typeof AuthenticatedSettingsRouteLazyRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedHistoryIndexRoute: typeof AuthenticatedHistoryIndexRoute
   AuthenticatedAgentIndexLazyRoute: typeof AuthenticatedAgentIndexLazyRoute
   AuthenticatedAppsIndexLazyRoute: typeof AuthenticatedAppsIndexLazyRoute
   AuthenticatedKanbanIndexLazyRoute: typeof AuthenticatedKanbanIndexLazyRoute
@@ -487,6 +502,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteLazyRoute:
     AuthenticatedSettingsRouteLazyRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedHistoryIndexRoute: AuthenticatedHistoryIndexRoute,
   AuthenticatedAgentIndexLazyRoute: AuthenticatedAgentIndexLazyRoute,
   AuthenticatedAppsIndexLazyRoute: AuthenticatedAppsIndexLazyRoute,
   AuthenticatedKanbanIndexLazyRoute: AuthenticatedKanbanIndexLazyRoute,
@@ -515,6 +531,7 @@ export interface FileRoutesByFullPath {
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceLazyRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayLazyRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsLazyRoute
+  '/history': typeof AuthenticatedHistoryIndexRoute
   '/agent': typeof AuthenticatedAgentIndexLazyRoute
   '/apps': typeof AuthenticatedAppsIndexLazyRoute
   '/kanban': typeof AuthenticatedKanbanIndexLazyRoute
@@ -539,6 +556,7 @@ export interface FileRoutesByTo {
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceLazyRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayLazyRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsLazyRoute
+  '/history': typeof AuthenticatedHistoryIndexRoute
   '/agent': typeof AuthenticatedAgentIndexLazyRoute
   '/apps': typeof AuthenticatedAppsIndexLazyRoute
   '/kanban': typeof AuthenticatedKanbanIndexLazyRoute
@@ -567,6 +585,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceLazyRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayLazyRoute
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsLazyRoute
+  '/_authenticated/history/': typeof AuthenticatedHistoryIndexRoute
   '/_authenticated/agent/': typeof AuthenticatedAgentIndexLazyRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexLazyRoute
   '/_authenticated/kanban/': typeof AuthenticatedKanbanIndexLazyRoute
@@ -595,6 +614,7 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/display'
     | '/settings/notifications'
+    | '/history'
     | '/agent'
     | '/apps'
     | '/kanban'
@@ -618,6 +638,7 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/display'
     | '/settings/notifications'
+    | '/history'
     | '/agent'
     | '/apps'
     | '/kanban'
@@ -644,6 +665,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
     | '/_authenticated/settings/notifications'
+    | '/_authenticated/history/'
     | '/_authenticated/agent/'
     | '/_authenticated/apps/'
     | '/_authenticated/kanban/'
@@ -712,6 +734,7 @@ export const routeTree = rootRoute
       "children": [
         "/_authenticated/settings",
         "/_authenticated/",
+        "/_authenticated/history/",
         "/_authenticated/agent/",
         "/_authenticated/apps/",
         "/_authenticated/kanban/",
@@ -782,6 +805,10 @@ export const routeTree = rootRoute
     "/_authenticated/settings/notifications": {
       "filePath": "_authenticated/settings/notifications.lazy.tsx",
       "parent": "/_authenticated/settings"
+    },
+    "/_authenticated/history/": {
+      "filePath": "_authenticated/history/index.tsx",
+      "parent": "/_authenticated"
     },
     "/_authenticated/agent/": {
       "filePath": "_authenticated/agent/index.lazy.tsx",

@@ -19,7 +19,7 @@ import {
 } from '@tabler/icons-react'
 import {
   AudioWaveform,
-  Command,
+  MoonStar,
   GalleryVerticalEnd,
   // SquareKanban
 } from 'lucide-react'
@@ -27,25 +27,25 @@ import { type SidebarData } from '../types'
 
 export const sidebarData: SidebarData = {
   user: {
-    name: 'satnaing',
-    email: 'satnaingdev@gmail.com',
+    name: '0xDEADBEEF',
+    email: '0xDEADBEEF@gmail.com',
     avatar: '/avatars/shadcn.jpg',
   },
   teams: [
     {
-      name: 'Voice Agent',
-      logo: Command,
-      plan: '0xDEADBEEF',
+      name: 'Luna',
+      logo: MoonStar,
+      mode: 'Sales Agent Mode',
     },
     {
-      name: 'Acme Inc',
+      name: 'Shopper',
       logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
+      mode: 'Price Assistant',
     },
     {
-      name: 'Acme Corp.',
+      name: 'Fashion',
       logo: AudioWaveform,
-      plan: 'Startup',
+      mode: 'Fashion Assistant',
     },
   ],
   navGroups: [
@@ -60,6 +60,11 @@ export const sidebarData: SidebarData = {
         {
           title: 'Agent',
           url: '/agent',
+          icon: IconChecklist,
+        },
+        {
+          title: 'History',
+          url: '/history',
           icon: IconChecklist,
         },
         // {
