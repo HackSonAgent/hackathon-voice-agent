@@ -2,14 +2,24 @@
 // src/services/api.ts
 
 /**
+ * 對話列表介面，根據 API 規範
+ */
+export interface ConversationResponse {
+  id: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
  * 訊息介面，根據 API 規範
  */
 export interface MessageResponse {
-  id: string;
+  id: number;
   username: string;
   content: string;
-  voice?: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -39,12 +49,32 @@ export const sendMessage = async (content: string): Promise<MessageResponse[]> =
 };
 
 /**
- * 獲取歷史對話訊息
- * @returns Promise 包含訊息歷史的陣列
+ * 獲取對話列表
+ * @returns Promise 包含對話列表的陣列
  */
-export const getConversationHistory = async (): Promise<MessageResponse[]> => {
+export const getConversationList = async (): Promise<ConversationResponse[]> => {
   try {
     const response = await fetch(`${import.meta.env.VITE_API_PATH}/conversations`);
+    
+    if (!response.ok) {
+      throw new Error(`API 請求失敗: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * 獲取特定對話的訊息列表
+ * @param conversationId 對話ID
+ * @returns Promise 包含訊息列表的陣列
+ */
+export const getMessageList = async (conversationId: number): Promise<MessageResponse[]> => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_PATH}/messages/${conversationId}`);
     
     if (!response.ok) {
       throw new Error(`API 請求失敗: ${response.status}`);
