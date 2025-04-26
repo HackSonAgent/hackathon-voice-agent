@@ -1,4 +1,4 @@
-import { ProductGrid } from './product-grid';
+
 import { UIMessage } from '@/types/conversation';
 
 interface MessageProps {
@@ -8,7 +8,6 @@ interface MessageProps {
 
 export function Message({
 	message,
-	purchasedProductId
 }: MessageProps): React.ReactElement {
 	return (
 		<div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -21,13 +20,7 @@ export function Message({
 					{message.content}
 				</div>
 
-				{/* 如果是助理回覆且包含商品推薦 */}
-				{message.role === 'assistant' && message.products && message.products.length > 0 && (
-					<ProductGrid
-						products={message.products}
-						purchasedProductId={purchasedProductId}
-					/>
-				)}
+				
 			</div>
 		</div>
 	);

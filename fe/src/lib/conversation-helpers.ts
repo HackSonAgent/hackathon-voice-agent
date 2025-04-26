@@ -77,7 +77,7 @@ export function detectPurchasedProduct(messages: UIMessage[] | null | undefined)
       for (let i = messages.indexOf(msg) - 1; i >= 0; i--) {
         if (messages[i] && messages[i].products ) {
           const product = messages[i].products!
-          return product[0].id;
+          return product[0];
         }
       }
     }
@@ -174,8 +174,8 @@ export function findPurchasedProductName(
   // 查找包含產品的消息
   for (const msg of messages) {
     if (msg.products && Array.isArray(msg.products)) {
-      const product = msg.products.find(p => p.id === purchasedProductId);
-      if (product) return product.name;
+      const product = msg.products.find(p => p === purchasedProductId);
+      if (product) return product;
     }
   }
   
