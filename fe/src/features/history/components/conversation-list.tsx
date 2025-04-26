@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { formatDate } from '@/lib/utils';
 import { UIConversation, ConversionFilterType } from '@/types/conversation';
-
+import { ScrollArea } from "@/components/ui/scroll-area"
 interface ConversationListProps {
 	conversations: UIConversation[];
 	selectedChatId: string;
@@ -38,47 +38,50 @@ export function ConversationList({
 				</div>
 			</CardHeader>
 			<CardContent>
-				<div className='flex flex-col space-y-2'>
-					{conversations
-						.filter(chat => {
-							if (conversionFilter === 'all') return true;
-							if (conversionFilter === 'converted') return !!chat.purchasedProduct;
-							if (conversionFilter === 'not-converted') return !chat.purchasedProduct;
-							return true;
-						})
-						.map(chat => (
-							<div
-								key={chat.id}
-								className={`rounded-lg p-3 cursor-pointer transition-colors ${selectedChatId === chat.id
-									? 'bg-primary text-primary-foreground'
-									: 'bg-muted hover:bg-muted/80'
-									}`}
-								onClick={() => onSelectChat(chat.id)}
-							>
-								<div className='flex items-center justify-between'>
-									<span className='font-medium'>{chat.userName}</span>
-									<Badge variant={chat.purchasedProduct ? 'default' : 'secondary'}>
-										{chat.purchasedProduct ? '已轉化' : '未轉化'}
-									</Badge>
-								</div>
-								<div className='mt-1 text-sm opacity-90'>
-									{formatDate(new Date(chat.date))}
-								</div>
-								{chat.messages.length > 0 && (
-									<div className='mt-1 truncate text-sm opacity-80'>
-										{chat.messages[0].content.substring(0, 40)}...
-									</div>
-								)}
-								<div className='mt-2 flex flex-wrap gap-1'>
-									{chat.tags.map(tag => (
-										<Badge key={tag} variant="outline" className="text-xs text-yellow-400 border-yellow-300 ">
-											{tag}
+				<ScrollArea className='h-[500px]'>
+					<div className='flex flex-col space-y-2'>
+						{conversations
+							.filter(chat => {
+								if (conversionFilter === 'all') return true;
+								if (conversionFilter === 'converted') return !!chat.purchasedProduct;
+								if (conversionFilter === 'not-converted') return !chat.purchasedProduct;
+								return true;
+							})
+							.map(chat => (
+								<div
+									key={chat.id}
+									className={`rounded-lg p-3 cursor-pointer transition-colors ${selectedChatId === chat.id
+										? 'bg-primary text-primary-foreground'
+										: 'bg-muted hover:bg-muted/80'
+										}`}
+									onClick={() => onSelectChat(chat.id)}
+								>
+									<div className='flex items-center justify-between'>
+										<span className='font-medium'>{chat.userName}</span>
+										<Badge variant={chat.purchasedProduct ? 'default' : 'secondary'}>
+											{chat.purchasedProduct ? '已轉化' : '未轉化'}
 										</Badge>
-									))}
+									</div>
+									<div className='mt-1 text-sm opacity-90'>
+										{formatDate(new Date(chat.date))}
+									</div>
+									{chat.messages.length > 0 && (
+										<div className='mt-1 truncate text-sm opacity-80'>
+											{chat.messages[0].content.substring(0, 40)}...
+										</div>
+									)}
+									<div className='mt-2 flex flex-wrap gap-1'>
+										{chat.tags.map(tag => (
+											<Badge key={tag} variant="outline" className="text-xs text-yellow-400 border-yellow-300 ">
+												{tag}
+											</Badge>
+										))}
+									</div>
 								</div>
-							</div>
-						))}
-				</div>
+							))}
+
+					</div>
+				</ScrollArea>
 			</CardContent>
 		</Card>
 	);

@@ -75,8 +75,9 @@ export function detectPurchasedProduct(messages: UIMessage[] | null | undefined)
       // 如果沒有明確提到產品ID，但有購買意圖
       // 查找之前消息中提到的最後一個產品
       for (let i = messages.indexOf(msg) - 1; i >= 0; i--) {
-        if (  messages[i] && messages[i].products && messages[i].products.length > 0) {
-          return messages[i].products[0].id;
+        if (messages[i] && messages[i].products ) {
+          const product = messages[i].products!
+          return product[0].id;
         }
       }
     }

@@ -22,19 +22,52 @@ export interface MessageResponse {
   updatedAt: string;
 }
 
+
+export interface MessagesResponse {
+  id: number;
+  username: string;
+  content: string;
+  createdAt: string;
+  voice: string;
+}
+
+
+
+
+export const createNewConversation =  async(): Promise<MessageResponse> =>{
+try {
+    const response = await fetch(`${import.meta.env.VITE_API_PATH}/conversations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`API 請求失敗: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data; // 應該返回包含用戶訊息和 AI 回應的陣列
+  } catch (error) {
+    throw error;
+  }
+}
+
+
 /**
  * 發送訊息到 API 並取得用戶輸入和 AI 回應
  * @param content 使用者輸入的訊息內容
  * @returns Promise 包含用戶訊息和 AI 回應的陣列
  */
-export const sendMessage = async (content: string): Promise<MessageResponse[]> => {
+export const sendMessage = async (content: string,conversationId:number): Promise<MessagesResponse[]> => {
   try {
     const response = await fetch(`${import.meta.env.VITE_API_PATH}/messages`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content ,conversationId}),
     });
 
     if (!response.ok) {

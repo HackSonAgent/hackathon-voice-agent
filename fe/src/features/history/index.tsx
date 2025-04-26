@@ -189,7 +189,7 @@ export default function ChatHistoryPage() {
 				{error && <div className="my-8 text-center text-red-500">{error}</div>}
 
 				{!isLoading && !error && conversations.length > 0 && (
-					<div className='mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3'>
+					<div className='mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3 '>
 						{/* 聊天列表 */}
 						<ConversationList
 							conversations={conversations}

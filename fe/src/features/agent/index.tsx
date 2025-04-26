@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { useState } from 'react';
+import {  useState } from 'react';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { ProfileDropdown } from '@/components/profile-dropdown';
@@ -13,12 +13,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Mic } from 'lucide-react';
 import { VoiceDialog } from './components/voice-dialog';
-import { MessageResponse, sendMessage } from '@/services/api';
+import { MessageResponse, sendMessage, createNewConversation, MessagesResponse } from '@/services/api';
 import { Loader2 } from 'lucide-react';
 
 // 整合 API 響應的訊息界面
 interface Message {
-  id: string;
+  id: number;
   content: string;
   sender: 'user' | 'ai';
   timestamp: string;
@@ -27,7 +27,7 @@ interface Message {
 
 // 訊息組件
 interface ChatMessageProps {
-  id: string;
+  id: number;
   content: string;
   sender: 'user' | 'ai';
   timestamp: string;
@@ -107,7 +107,7 @@ export default function ChatBoard() {
   const [isVoiceDialogOpen, setIsVoiceDialogOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
+  const [conversation, setConversation] = useState<MessageResponse>();
 
   // 格式化時間戳
   const formatTimestamp = (isoString: string): string => {
@@ -129,16 +129,33 @@ export default function ChatBoard() {
     setError(null);
 
     const messageContent = newMessage;
-    setNewMessage(""); // 立即清空輸入框
+    setNewMessage(""); // Clear input immediately
 
     try {
-      // 發送訊息到 API
-      const response = await sendMessage(messageContent);
+      let currentConversation = conversation;
 
+      // If no conversation exists, create one first
+      if (!currentConversation) {
+        try {
+          const newConversation = await createNewConversation();
+          setConversation(newConversation);
+          currentConversation = newConversation;
+          console.log("New conversation created:", newConversation);
+        } catch (error) {
+          console.error("Failed to create conversation:", error);
+          setError("Failed to create conversation. Please try again.");
+          setNewMessage(messageContent); // Restore message for retry
+          setIsLoading(false);
+          return;
+        }
+      }
 
-      // API 返回用戶訊息和 AI 回應的陣列
-      const newMessages = response.map((msg: MessageResponse) => {
-        const sender = msg.username === "0000" ? "ai" : "user" as 'user'| 'ai'
+      // Now send the message using the conversation ID
+      const response = await sendMessage(messageContent, currentConversation.id);
+
+      // Process API response
+      const newMessages = response.map((msg: MessagesResponse): Message => {
+        const sender = msg.username === "0000" ? "ai" : "user" as 'user' | 'ai';
         const timestamp = formatTimestamp(msg.createdAt);
 
         return {
@@ -148,17 +165,14 @@ export default function ChatBoard() {
           timestamp,
           voice: msg.voice
         };
-
       });
 
-
-      // 將新訊息添加到界面
+      // Add new messages to UI
       setMessages(prev => [...prev, ...newMessages]);
     } catch (err) {
-      console.error('發送訊息錯誤:', err);
-      setError("發送訊息失敗。請檢查網絡連接並重試。");
-      // 還原輸入框中的訊息，讓用戶可以重試
-      setNewMessage(messageContent);
+      console.error('Message sending error:', err);
+      setError("Failed to send message. Please check your network connection and try again.");
+      setNewMessage(messageContent); // Restore message for retry
     } finally {
       setIsLoading(false);
     }
@@ -172,6 +186,9 @@ export default function ChatBoard() {
     setNewMessage(transcript);
     setIsVoiceDialogOpen(false);
   };
+
+
+
 
   return (
     <>
@@ -191,9 +208,9 @@ export default function ChatBoard() {
         </div>
 
         {/* Chat Container */}
-        <Card className="flex flex-col h-[calc(100vh-10rem)] sm:h-[calc(100vh-11rem)] md:h-[calc(100vh-12rem)]">
+        <Card className="flex flex-col h-[calc(100vh-10rem)] sm:h-[calc(100vh-11rem)] md:h-[calc(100vh-7.5rem)]">
           {/* Message Container */}
-          <ScrollArea className="flex-1 p-2 md:p-4">
+          <ScrollArea className="flex-1 p-2 md:p-4 h-[600px] overflow-hidden">
             {messages.length === 0 && !isLoading && !error && (
               <div className="flex justify-center items-center h-full text-muted-foreground">
                 開始與 Luna 對話，獲取商品推薦
