@@ -1,8 +1,4 @@
-import {
-  ChevronsUpDown,
-  LogOut,
-  Sparkles,
-} from 'lucide-react'
+import { ChevronsUpDown, LogOut, Sparkles } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -76,7 +72,7 @@ export function NavUser({
                 Upgrade to Pro
               </DropdownMenuItem>
             </DropdownMenuGroup>
-          
+
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <LogOut />

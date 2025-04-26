@@ -5,7 +5,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-
 // File: lib/utils.ts
 /**
  * 日期格式化工具
@@ -15,22 +14,22 @@ export function cn(...inputs: ClassValue[]) {
  */
 export function formatDate(date: Date | null | undefined): string {
   if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
-    return '無效日期';
+    return '無效日期'
   }
-  
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`
 }
 
 interface MessageWithTimestamp {
-  timestamp: string | number | Date;
+  timestamp: string | number | Date
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  [key: string]: any
 }
 
 /**
@@ -39,24 +38,30 @@ interface MessageWithTimestamp {
  * @param messages - 消息數組，每個消息需要有 timestamp 屬性
  * @returns 格式化後的持續時間字符串
  */
-export function calculateDuration(messages: MessageWithTimestamp[] | null | undefined): string {
+export function calculateDuration(
+  messages: MessageWithTimestamp[] | null | undefined
+): string {
   if (!messages || messages.length < 2) {
-    return '0分鐘';
+    return '0分鐘'
   }
-  
+
   // 假設 messages 是按時間排序的
-  const firstTimestamp = new Date(messages[0].timestamp).getTime();
-  const lastTimestamp = new Date(messages[messages.length - 1].timestamp).getTime();
-  
+  const firstTimestamp = new Date(messages[0].timestamp).getTime()
+  const lastTimestamp = new Date(
+    messages[messages.length - 1].timestamp
+  ).getTime()
+
   // 計算分鐘差
-  const durationMinutes = Math.round((lastTimestamp - firstTimestamp) / (1000 * 60));
-  
+  const durationMinutes = Math.round(
+    (lastTimestamp - firstTimestamp) / (1000 * 60)
+  )
+
   if (durationMinutes < 60) {
-    return `${durationMinutes}分鐘`;
+    return `${durationMinutes}分鐘`
   } else {
-    const hours = Math.floor(durationMinutes / 60);
-    const minutes = durationMinutes % 60;
-    return `${hours}小時${minutes > 0 ? ` ${minutes}分鐘` : ''}`;
+    const hours = Math.floor(durationMinutes / 60)
+    const minutes = durationMinutes % 60
+    return `${hours}小時${minutes > 0 ? ` ${minutes}分鐘` : ''}`
   }
 }
 
@@ -67,31 +72,31 @@ export function calculateDuration(messages: MessageWithTimestamp[] | null | unde
  * @returns 相對時間字符串
  */
 export function relativeTime(date: Date | string | null | undefined): string {
-  if (!date) return '未知時間';
-  
-  const now = new Date();
-  const targetDate = date instanceof Date ? date : new Date(date);
-  
+  if (!date) return '未知時間'
+
+  const now = new Date()
+  const targetDate = date instanceof Date ? date : new Date(date)
+
   if (isNaN(targetDate.getTime())) {
-    return '未知時間';
+    return '未知時間'
   }
-  
-  const diffSeconds = Math.floor((now.getTime() - targetDate.getTime()) / 1000);
-  
+
+  const diffSeconds = Math.floor((now.getTime() - targetDate.getTime()) / 1000)
+
   if (diffSeconds < 60) {
-    return '剛剛';
+    return '剛剛'
   } else if (diffSeconds < 3600) {
-    const minutes = Math.floor(diffSeconds / 60);
-    return `${minutes}分鐘前`;
+    const minutes = Math.floor(diffSeconds / 60)
+    return `${minutes}分鐘前`
   } else if (diffSeconds < 86400) {
-    const hours = Math.floor(diffSeconds / 3600);
-    return `${hours}小時前`;
+    const hours = Math.floor(diffSeconds / 3600)
+    return `${hours}小時前`
   } else if (diffSeconds < 2592000) {
-    const days = Math.floor(diffSeconds / 86400);
-    return `${days}天前`;
+    const days = Math.floor(diffSeconds / 86400)
+    return `${days}天前`
   } else {
     // 超過30天則返回具體日期
-    return formatDate(targetDate);
+    return formatDate(targetDate)
   }
 }
 
@@ -102,15 +107,18 @@ export function relativeTime(date: Date | string | null | undefined): string {
  * @param decimals - 保留的小數位數
  * @returns 格式化後的數字字符串
  */
-export function formatNumber(number: number | null | undefined, decimals: number = 0): string {
+export function formatNumber(
+  number: number | null | undefined,
+  decimals: number = 0
+): string {
   if (number === null || number === undefined || isNaN(number)) {
-    return '0';
+    return '0'
   }
-  
+
   return number.toLocaleString('zh-TW', {
     minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals
-  });
+    maximumFractionDigits: decimals,
+  })
 }
 
 /**
@@ -122,12 +130,12 @@ export function formatNumber(number: number | null | undefined, decimals: number
  */
 export function percentChange(current: number, previous: number): string {
   if (previous === 0) {
-    return current > 0 ? '+∞%' : '0%';
+    return current > 0 ? '+∞%' : '0%'
   }
-  
-  const change = ((current - previous) / Math.abs(previous)) * 100;
-  const sign = change > 0 ? '+' : '';
-  return `${sign}${change.toFixed(1)}%`;
+
+  const change = ((current - previous) / Math.abs(previous)) * 100
+  const sign = change > 0 ? '+' : ''
+  return `${sign}${change.toFixed(1)}%`
 }
 
 /**
@@ -137,13 +145,14 @@ export function percentChange(current: number, previous: number): string {
  * @returns 隨機 ID 字符串
  */
 export function generateId(length: number = 8): string {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  
+  const characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let result = ''
+
   for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    result += characters.charAt(randomIndex);
+    const randomIndex = Math.floor(Math.random() * characters.length)
+    result += characters.charAt(randomIndex)
   }
-  
-  return result;
+
+  return result
 }

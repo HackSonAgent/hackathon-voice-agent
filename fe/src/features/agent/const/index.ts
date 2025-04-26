@@ -1,5 +1,5 @@
-    // Vertex shader code
-    export const vertexShader = `
+// Vertex shader code
+export const vertexShader = `
       uniform float u_time;
       uniform float u_intensity;
       uniform float u_audioLevel;
@@ -96,10 +96,10 @@
           
           gl_Position = projectedPosition;
       }
-    `;
-    
-    // Fragment shader code
-   export const fragmentShader = `
+    `
+
+// Fragment shader code
+export const fragmentShader = `
       uniform float u_intensity;
       uniform float u_time;
       uniform float u_audioLevel;
@@ -139,4 +139,4 @@
           
           gl_FragColor = vec4(color, 1.0);
       }
-    `;
+    `
