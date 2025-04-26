@@ -68,16 +68,45 @@ export default function ComingSoon() {
   }, []);
 
 
-  useEffect(()=>{
+  useEffect(() => {
+    // 異步函數來獲取數據
+    const fetchConversations = async () => {
+      // 重置錯誤狀態
+      setError(null);
+      // 設置加載狀態
+      setLoading(true);
 
-    const getData = async ()=>{
-      const response = await fetch('https://2do1mkam6i.execute-api.us-west-2.amazonaws.com/v1/conversations');
-      console.log(response)
-    }
+      try {
+        // 使用環境變數構建 API URL
+        const apiUrl = `${import.meta.env.VITE_API_PATH}/conversations`;
+        console.log('Fetching from:', apiUrl);
 
-    getData()
+        const response = await fetch(apiUrl);
 
-  })
+        // 檢查響應是否成功
+        if (!response.ok) {
+          throw new Error(`API 請求失敗: ${response.status}`);
+        }
+
+        // 解析 JSON 響應
+        const data = await response.json();
+        console.log('Fetched data:', data);
+
+        // 更新狀態
+
+      } catch (err) {
+        console.error('獲取數據時出錯:', err);
+      } finally {
+        // 無論成功或失敗都設置加載完成
+        setLoading(false);
+      }
+    };
+
+    // 調用獲取函數
+    fetchConversations();
+
+    // 空依賴數組意味著這個 effect 只在組件掛載時運行一次
+  }, []);
 
   return (
     <>
