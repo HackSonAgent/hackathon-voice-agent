@@ -38,7 +38,6 @@ interface ChatMessageProps {
   timestamp: string
   voice?: string
 }
-
 const ChatMessage = ({
   content,
   sender,
@@ -46,84 +45,94 @@ const ChatMessage = ({
   voice,
 }: ChatMessageProps) => {
   const isUser = sender === 'user'
+  const [isVoiceDialogOpen, setIsVoiceDialogOpen] = useState<boolean>(false)
 
-  // 處理語音播放
+  // Handle voice playback with visualization
   const handlePlayVoice = () => {
     if (voice) {
-      // 創建一個音頻元素來播放語音
-      const audio = new Audio(voice)
-      audio.play().catch((error) => console.error('播放語音失敗:', error))
+      setIsVoiceDialogOpen(true)
     }
   }
 
   return (
-    <div
-      className={cn(
-        'mb-2 flex w-full gap-1 md:mb-4 md:gap-2',
-        isUser ? 'justify-end' : 'justify-start'
-      )}
-    >
-      {!isUser && (
-        <Avatar className='h-6 w-6 flex-shrink-0 md:h-8 md:w-8'>
-          <AvatarImage
-            src='https://images.unsplash.com/photo-1501523321-8ecb927b4be6?q=80&w=2360&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
-            alt='Luna'
-          />
-        </Avatar>
-      )}
-
+    <>
       <div
         className={cn(
-          'flex max-w-[75%] flex-col sm:max-w-[80%]',
-          isUser ? 'items-end' : 'items-start'
+          'mb-2 flex w-full gap-1 md:mb-4 md:gap-2',
+          isUser ? 'justify-end' : 'justify-start'
         )}
       >
+        {!isUser && (
+          <Avatar className='h-6 w-6 flex-shrink-0 md:h-8 md:w-8'>
+            <AvatarImage
+              src='https://images.unsplash.com/photo-1501523321-8ecb927b4be6?q=80&w=2360&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+              alt='Luna'
+            />
+          </Avatar>
+        )}
+
         <div
           className={cn(
-            'rounded-lg px-2 py-1 text-sm md:px-4 md:py-2 md:text-base',
-            isUser ? 'bg-primary text-primary-foreground' : 'bg-muted'
+            'flex max-w-[75%] flex-col sm:max-w-[80%]',
+            isUser ? 'items-end' : 'items-start'
           )}
         >
-          {content}
-          {voice && !isUser && (
-            <Button
-              variant='ghost'
-              size='sm'
-              className='ml-2 h-6 w-6 p-0'
-              onClick={handlePlayVoice}
-            >
-              <svg
-                xmlns='http://www.w3.org/2000/svg'
-                viewBox='0 0 24 24'
-                fill='none'
-                stroke='currentColor'
-                strokeWidth='2'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                className='h-4 w-4'
+          <div
+            className={cn(
+              'rounded-lg px-2 py-1 text-sm md:px-4 md:py-2 md:text-base',
+              isUser ? 'bg-primary text-primary-foreground' : 'bg-muted'
+            )}
+          >
+            {content}
+            {voice && !isUser && (
+              <Button
+                variant='ghost'
+                size='sm'
+                className='ml-2 h-6 w-6 p-0'
+                onClick={handlePlayVoice}
               >
-                <polygon points='5 3 19 12 5 21 5 3'></polygon>
-              </svg>
-              <span className='sr-only'>播放語音</span>
-            </Button>
-          )}
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth='2'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  className='h-4 w-4'
+                >
+                  <polygon points='5 3 19 12 5 21 5 3'></polygon>
+                </svg>
+                <span className='sr-only'>播放語音</span>
+              </Button>
+            )}
+          </div>
+          <span className='text-muted-foreground mt-0.5 text-xs md:mt-1'>
+            {timestamp}
+          </span>
         </div>
-        <span className='text-muted-foreground mt-0.5 text-xs md:mt-1'>
-          {timestamp}
-        </span>
+
+        {isUser && (
+          <Avatar className='h-6 w-6 flex-shrink-0 md:h-8 md:w-8'>
+            <div className='bg-secondary text-secondary-foreground flex h-full w-full items-center justify-center rounded-full text-xs md:text-sm'>
+              You
+            </div>
+          </Avatar>
+        )}
       </div>
 
-      {isUser && (
-        <Avatar className='h-6 w-6 flex-shrink-0 md:h-8 md:w-8'>
-          <div className='bg-secondary text-secondary-foreground flex h-full w-full items-center justify-center rounded-full text-xs md:text-sm'>
-            You
-          </div>
-        </Avatar>
+      {/* Voice Dialog for audio playback with visualization */}
+      {voice && (
+        <VoiceDialog
+          isOpen={isVoiceDialogOpen}
+          onOpenChange={setIsVoiceDialogOpen}
+          playbackMode={true}
+          audioUrl={voice}
+        />
       )}
-    </div>
+    </>
   )
 }
-
 export default function ChatBoard() {
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState<string>('')
@@ -193,6 +202,7 @@ export default function ChatBoard() {
           voice: msg.voice,
         }
       })
+      
 
       // Add new messages to UI
       setMessages((prev) => [...prev, ...newMessages])

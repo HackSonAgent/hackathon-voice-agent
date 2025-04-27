@@ -1,6 +1,9 @@
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Mic, MicOff, Loader2 } from 'lucide-react'
+import { Mic, MicOff, Loader2, X } from 'lucide-react'
 import * as THREE from 'three'
+import { OpenAI } from 'openai'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -15,19 +18,25 @@ import { vertexShader, fragmentShader } from '../const/index'
 interface VoiceDialogProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  onTranscriptComplete: (transcript: string) => void
+  onTranscriptComplete?: (transcript: string) => void
+  playbackMode?: boolean
+  audioUrl?: string
 }
 
 export function VoiceDialog({
   isOpen,
   onOpenChange,
   onTranscriptComplete,
+  playbackMode = false,
+  audioUrl = '',
 }: VoiceDialogProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
   const [isListening, setIsListening] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
   const [audioLevel, setAudioLevel] = useState(0)
   const [transcript, setTranscript] = useState('')
   const [isTranscribing, setIsTranscribing] = useState(false)
+
 
   // Three.js references
   const sceneRef = useRef<THREE.Scene | null>(null)
@@ -45,10 +54,12 @@ export function VoiceDialog({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const audioUpdateFrameRef = useRef<number | null>(null)
+  const audioElementRef = useRef<HTMLAudioElement | null>(null)
+  const audioSourceRef = useRef<MediaElementAudioSourceNode | null>(null)
 
   // Update audio level for visualization
   const updateAudioLevel = useCallback(() => {
-    if (!isListening || !analyserRef.current) return
+    if ((!isListening && !isPlaying) || !analyserRef.current) return
 
     const bufferLength = analyserRef.current.frequencyBinCount
     const dataArray = new Uint8Array(bufferLength)
@@ -65,9 +76,9 @@ export function VoiceDialog({
     // Normalize between 0 and 1 with some amplification
     setAudioLevel(Math.min(1, avg / 128))
 
-    // Continue updating if still listening
+    // Continue updating if still listening or playing
     audioUpdateFrameRef.current = requestAnimationFrame(updateAudioLevel)
-  }, [isListening])
+  }, [isListening, isPlaying])
 
   // Animation function
   const animate = useCallback(() => {
@@ -153,6 +164,11 @@ export function VoiceDialog({
     // Start animation
     animate()
 
+    // Start playback if in playback mode
+    if (playbackMode && audioUrl) {
+      startPlayback(audioUrl)
+    }
+
     // Cleanup function
     return () => {
       if (animationFrameRef.current) {
@@ -163,15 +179,18 @@ export function VoiceDialog({
       if (rendererRef.current && canvasRef.current) {
         canvasRef.current.removeChild(rendererRef.current.domElement)
       }
+
+      // Clean up audio
+      stopPlayback()
     }
-  }, [isOpen, animate])
+  }, [isOpen, animate, playbackMode, audioUrl])
 
   // Handle audio level updates
   useEffect(() => {
-    if (isListening) {
+    if (isListening || isPlaying) {
       updateAudioLevel()
     } else {
-      // Cancel the audio update if not listening
+      // Cancel the audio update if not listening or playing
       if (audioUpdateFrameRef.current) {
         cancelAnimationFrame(audioUpdateFrameRef.current)
         audioUpdateFrameRef.current = null
@@ -184,7 +203,63 @@ export function VoiceDialog({
         audioUpdateFrameRef.current = null
       }
     }
-  }, [isListening, updateAudioLevel])
+  }, [isListening, isPlaying, updateAudioLevel])
+
+  // Start audio playback and analysis
+  const startPlayback = (url: string) => {
+    try {
+      // Create audio context for analysis
+      audioContextRef.current = new (window.AudioContext ||
+        window.AudioContext)()
+      analyserRef.current = audioContextRef.current.createAnalyser()
+      analyserRef.current.fftSize = 256
+
+      // Create audio element
+      audioElementRef.current = new Audio(url)
+      audioElementRef.current.crossOrigin = 'anonymous' // Required for external audio sources
+
+      // Connect audio to analyzer
+      audioSourceRef.current = audioContextRef.current.createMediaElementSource(audioElementRef.current)
+      audioSourceRef.current.connect(analyserRef.current)
+      analyserRef.current.connect(audioContextRef.current.destination)
+
+      // Play audio
+      audioElementRef.current.play().then(() => {
+        setIsPlaying(true)
+      }).catch(error => {
+        console.error('Audio playback error:', error)
+      })
+
+      // Handle when audio finishes
+      audioElementRef.current.onended = () => {
+        stopPlayback()
+      }
+    } catch (error) {
+      console.error('Audio playback setup error:', error)
+    }
+  }
+
+  // Stop audio playback
+  const stopPlayback = () => {
+    setIsPlaying(false)
+    setAudioLevel(0)
+
+    if (audioElementRef.current) {
+      audioElementRef.current.pause()
+      audioElementRef.current.currentTime = 0
+      audioElementRef.current = null
+    }
+
+    if (audioSourceRef.current) {
+      audioSourceRef.current.disconnect()
+      audioSourceRef.current = null
+    }
+
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(e => console.error(e))
+      audioContextRef.current = null
+    }
+  }
 
   // Start audio recording and analysis
   const startListening = async () => {
@@ -211,13 +286,53 @@ export function VoiceDialog({
       }
 
       mediaRecorderRef.current.start()
-
-      // Note: No need to call updateAudioLevel() here
-      // It's now handled by the useEffect that watches isListening
     } catch (error) {
       alert('Please allow microphone access to use voice reactivity' + error)
     }
   }
+
+  // Transcribe audio using OpenAI API
+  const transcribeAudio = async () => {
+    try {
+      setIsTranscribing(true);
+
+      // Create audio blob from recorded chunks
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/mp3' });
+
+      // Initialize OpenAI client
+      const client = new OpenAI({
+        apiKey: import.meta.env.VITE_OPEN_API_KEY,
+        dangerouslyAllowBrowser: true 
+      });
+
+      // Make API request
+      try {
+        // Convert blob to file with proper extension matching the MIME type
+        const file = new File([audioBlob], 'audio.webm', { type: 'audio/webm' });
+
+        // For debugging - log file size and type
+        console.log('File size:', file.size, 'bytes');
+        console.log('File type:', file.type);
+
+        // Call the OpenAI API
+        const transcription = await client.audio.transcriptions.create({
+          model: "whisper-1", // Use whisper-1 which is more reliable for browser-recorded audio
+          file: file
+        });
+
+        // Update transcript state
+        setTranscript(transcription.text);
+      } catch (error) {
+        console.error('Transcription API error:', error);
+        setTranscript(`Error transcribing audio: ${error || 'Please try again.'}`);
+      }
+    } catch (error) {
+      console.error('Audio processing error:', error);
+      setTranscript('Error processing audio. Please try again.');
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
 
   // Stop audio recording and start transcription
   const stopListening = () => {
@@ -239,38 +354,17 @@ export function VoiceDialog({
 
       // Process recording and transcribe
       mediaRecorderRef.current.onstop = async () => {
-        setIsTranscribing(true)
-
-        // In a real app, you would send this audio to a transcription service
-        // For demo purposes, we'll simulate a delay and return a fake transcript
-        await simulateTranscription()
-
-        setIsTranscribing(false)
+        await transcribeAudio();
       }
     }
   }
 
-  // Simulate transcription with a delay
-  const simulateTranscription = async () => {
-    // In a real app, you would:
-    // 1. Create an audio blob from audioChunksRef.current
-    // 2. Send this to a transcription API
-    // 3. Set the returned transcript
-
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        // Fake transcript for demo
-        const fakeTranscript =
-          'This is a simulated transcript of what was recorded.'
-        setTranscript(fakeTranscript)
-        resolve()
-      }, 2000)
-    })
-  }
 
   // Complete transcription and close dialog
   const handleComplete = () => {
-    onTranscriptComplete(transcript)
+    if (onTranscriptComplete && transcript) {
+      onTranscriptComplete(transcript)
+    }
     onOpenChange(false)
   }
 
@@ -279,6 +373,7 @@ export function VoiceDialog({
     if (!isOpen) {
       setTranscript('')
       setIsListening(false)
+      setIsPlaying(false)
       setAudioLevel(0)
       setIsTranscribing(false)
 
@@ -292,16 +387,25 @@ export function VoiceDialog({
         cancelAnimationFrame(audioUpdateFrameRef.current)
         audioUpdateFrameRef.current = null
       }
+
+      // Stop any ongoing playback
+      stopPlayback()
     }
   }, [isOpen])
+
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle>Voice Recording</DialogTitle>
+          <DialogTitle>
+            {playbackMode ? 'AI Voice Message' : 'Voice Recording'}
+          </DialogTitle>
           <DialogDescription>
-            Speak clearly to record your message
+            {playbackMode
+              ? 'Listening to AI message'
+              : 'Speak clearly to record your message'}
           </DialogDescription>
         </DialogHeader>
 
@@ -320,8 +424,10 @@ export function VoiceDialog({
             />
           </div>
 
+     
+
           {/* Transcript display */}
-          {transcript && (
+          {!playbackMode && transcript && (
             <div className='mt-4 w-full max-w-xs rounded bg-gray-100 p-3 text-sm text-gray-800'>
               {transcript}
             </div>
@@ -329,7 +435,11 @@ export function VoiceDialog({
         </div>
 
         <DialogFooter className='flex flex-row justify-between gap-2 sm:justify-between'>
-          {isTranscribing ? (
+          {playbackMode ? (
+            <Button onClick={() => onOpenChange(false)} className='w-full'>
+              <X className='mr-2 h-4 w-4' /> Close
+            </Button>
+          ) : isTranscribing ? (
             <div className='flex items-center gap-2 text-sm text-gray-500'>
               <Loader2 className='h-4 w-4 animate-spin' />
               Transcribing...
