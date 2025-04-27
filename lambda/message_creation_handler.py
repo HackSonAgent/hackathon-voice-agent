@@ -4,22 +4,25 @@ import boto3
 import uuid
 import numpy as np
 import json
+import wave
+import io
 
-DB_HOST = 'voice-agent-db.cluster-c1848oukey3f.us-west-2.rds.amazonaws.com'
+DB_HOST = ''
 DB_PORT = 5432
-DB_NAME = 'postgres'
-DB_USER = 'postgres'
-DB_PASS = 'wlujAg*n*GbZ9]X6i:tIKcI$g-33'
+DB_NAME = ''
+DB_USER = ''
+DB_PASS = ''
 
 # Bedrock
 AWS_REGION = "us-west-2"  # e.g., 'us-east-1', 'us-west-2', etc.
 AGENT_ID = "H4I1KUGNCW"  # Replace with your Agent's ID
-AGENT_ALIAS_ID = "KFQOM86XP9"  # Replace with your Agent's Alias ID (often TSTALIASID for draft)
+AGENT_ALIAS_ID = "KJO2KVHJO3"  # Replace with your Agent's Alias ID (often TSTALIASID for draft)
 
 # Polly
 VOICE_ID = 'Zhiyu'  # Mandarin Chinese female voice
 OUTPUT_FORMAT = 'pcm'  # raw audio format
 SAMPLE_RATE = 16000  # 16kHz
+CHANNELS = 1
 
 # S3
 BUCKET_NAME = "voice-agent-file"
@@ -31,7 +34,8 @@ s3 = boto3.client('s3', region_name=AWS_REGION)
 try:
     bedrock_agent_runtime_client = boto3.client('bedrock-agent-runtime',
                                                 region_name=AWS_REGION)
-    bedrock_llm_runtime = boto3.client('bedrock-runtime', region_name=AWS_REGION)
+    bedrock_llm_runtime = boto3.client('bedrock-runtime',
+                                       region_name=AWS_REGION)
 except Exception as e:
     raise e
 
@@ -45,26 +49,39 @@ def gen_voice(text):
                                        SampleRate=str(SAMPLE_RATE))
 
     # ---- UPLOAD TO S3 ----
-    audio_stream = response['AudioStream']
+    # audio_stream = response['AudioStream']
+    pcm_audio = response['AudioStream'].read()
+
+    # filename = f"{uuid.uuid4()}.wav"
+    # s3.upload_fileobj(Fileobj=audio_stream, Bucket=BUCKET_NAME, Key=filename)
+    # ---- CONVERT PCM to WAV ----
+    wav_io = io.BytesIO()
+    with wave.open(wav_io, 'wb') as wav_file:
+        wav_file.setnchannels(CHANNELS)
+        wav_file.setsampwidth(2)  # 16-bit PCM = 2 bytes
+        wav_file.setframerate(SAMPLE_RATE)
+        wav_file.writeframes(pcm_audio)
+
+    wav_io.seek(0)  # Reset pointer to start
+    # ---- UPLOAD TO S3 ----
     filename = f"{uuid.uuid4()}.wav"
-    s3.upload_fileobj(Fileobj=audio_stream, Bucket=BUCKET_NAME, Key=filename)
+    s3.upload_fileobj(Fileobj=wav_io, Bucket=BUCKET_NAME, Key=filename)
 
     # ---- GENERATE PUBLIC URL ----
     return f"https://d18bgxx0d319kq.cloudfront.net/{filename}"
 
+
 def call_llm(prompt: str) -> str:
     body = {
-         "anthropic_version": "bedrock-2023-05-31",
-        "messages": [
-            {
-                "role": "user",
-                "content": prompt,
-            }
-        ],
+        "anthropic_version": "bedrock-2023-05-31",
+        "messages": [{
+            "role": "user",
+            "content": prompt,
+        }],
         "max_tokens": 8152,
         "temperature": 0.7
     }
-    
+
     arguments = {
         "modelId": "anthropic.claude-3-5-haiku-20241022-v1:0",
         "contentType": "application/json",
@@ -75,6 +92,7 @@ def call_llm(prompt: str) -> str:
     response_body = json.loads(response.get('body').read())
     print(f"RESPONSE: {response_body}")
     return response_body['content'][0]['text']
+
 
 def follow_up_metadata_question(all_conversation: str, text: str) -> str:
     system_prompt = "You are a friendly and helpful sales agent engaging a potential customer. Your goal is to gather specific metadata points through natural and engaging conversation. You will receive a list of desired metadata and a history of the conversation so far. Your task is to generate the next logical and sales-oriented question to ask the user, aiming to collect one or more pieces of metadata. Ensure the question flows naturally from the previous turn in the conversation and maintains a positive and encouraging tone. Output ONLY the next question you would ask."
@@ -87,6 +105,7 @@ def follow_up_metadata_question(all_conversation: str, text: str) -> str:
     prompt = f"{system_prompt} \n {user_prompt}"
     return call_llm(prompt=prompt)
 
+
 def recommend_product(all_conversation: str, text: str) -> str:
     system_prompt = "You are a helpful and enthusiastic sales assistant. Your role is to recommend products to customers based on their needs and the ongoing conversation. You will be provided with a list of products and their details, as well as the current conversation history. Your task is to generate the next conversational turn, focusing on recommending one or more products from the list. The recommendation should be relevant to the customer's previous statements, needs, or interests expressed in the conversation. Maintain a friendly and persuasive tone, highlighting the key features and benefits of the recommended product(s) and how they address the customer's needs. Only output the next conversational turn. Do not include any other text or headers."
     user_prompt = f"""
@@ -96,73 +115,77 @@ def recommend_product(all_conversation: str, text: str) -> str:
     prompt = f"{system_prompt} \n {user_prompt}"
     return call_llm(prompt=prompt)
 
-def parse_flow_opt(all_conversation: str ,event):
-    
+
+def parse_flow_opt(all_conversation: str, event):
+
     node_name = event['nodeName']
-    if node_name ==  'FlowOuputNode_2':
-        text =  event['content']['document']
-        return recommend_product(text = text, all_conversation=all_conversation)
+    if node_name == 'FlowOuputNode_2':
+        text = event['content']['document']
+        return recommend_product(text=text, all_conversation=all_conversation)
     elif node_name == 'FlowOutputNode_1':
-        return follow_up_metadata_question(all_conversation=all_conversation, text=event['content']['document'])
+        return follow_up_metadata_question(all_conversation=all_conversation,
+                                           text=event['content']['document'])
+
 
 def invoke_rag_flow(prompt):
 
     # try:
-        # Invoke the agent
-        response = bedrock_agent_runtime_client.invoke_flow(
-            flowIdentifier=AGENT_ID,
-            flowAliasIdentifier=AGENT_ALIAS_ID,
-            inputs=[
-                {
-                    'content': {
-                        'document': prompt
-                    },
-                    "nodeName": "FlowInputNode",
-                    "nodeOutputName": "document"
+    # Invoke the agent
+    response = bedrock_agent_runtime_client.invoke_flow(
+        flowIdentifier=AGENT_ID,
+        flowAliasIdentifier=AGENT_ALIAS_ID,
+        inputs=[
+            {
+                'content': {
+                    'document': prompt
                 },
-            ],
-            enableTrace=
-            False  # Set to True to get detailed trace information (optional)
-        )
+                "nodeName": "FlowInputNode",
+                "nodeOutputName": "document"
+            },
+        ],
+        enableTrace=
+        False  # Set to True to get detailed trace information (optional)
+    )
 
-        # Handle the streaming response
-        completion = ""
-        response_stream = response.get('responseStream')
+    # Handle the streaming response
+    completion = ""
+    response_stream = response.get('responseStream')
 
-        if not response_stream:
-            print("Error: No completion stream found in the response.")
-            return None
+    if not response_stream:
+        print("Error: No completion stream found in the response.")
+        return None
 
-        print("Agent Response:")
-        for event in response_stream:
-            if 'chunk' in event:
-                data = event['chunk']['bytes']
-                chunk_text = data.decode('utf-8')
-                print(chunk_text, end="")  # Print chunks as they arrive
-                completion += chunk_text
-            elif 'trace' in event:
-                # You can process trace information here if enableTrace=True
-                # print(json.dumps(event['trace'], indent=2))
-                pass
-            elif 'attribution' in event:
-                # You can process citation/attribution information here if available
-                # print("\n\n-----Attribution-----")
-                # print(json.dumps(event['attribution'], indent=2))
-                pass
-            elif 'flowOutputEvent' in event:
-                completion += parse_flow_opt(all_conversation=prompt,event=event['flowOutputEvent'])
-            else:
-                print(f"\nWarning: Received unknown event type: {event}")
+    print("Agent Response:")
+    for event in response_stream:
+        if 'chunk' in event:
+            data = event['chunk']['bytes']
+            chunk_text = data.decode('utf-8')
+            print(chunk_text, end="")  # Print chunks as they arrive
+            completion += chunk_text
+        elif 'trace' in event:
+            # You can process trace information here if enableTrace=True
+            # print(json.dumps(event['trace'], indent=2))
+            pass
+        elif 'attribution' in event:
+            # You can process citation/attribution information here if available
+            # print("\n\n-----Attribution-----")
+            # print(json.dumps(event['attribution'], indent=2))
+            pass
+        elif 'flowOutputEvent' in event:
+            completion += parse_flow_opt(all_conversation=prompt,
+                                         event=event['flowOutputEvent'])
+        else:
+            print(f"\nWarning: Received unknown event type: {event}")
 
-        print("\n--- End of Agent Response ---")
-        return completion  # Return the full concatenated response
+    print("\n--- End of Agent Response ---")
+    return completion  # Return the full concatenated response
 
-    # except boto3.exceptions.Boto3Error as e:
-    #     print(f"AWS API Error: {e}")
-    #     return None
-    # except Exception as e:
-    #     print(f"An unexpected error occurred: {e}")
-    #     return None
+# except boto3.exceptions.Boto3Error as e:
+#     print(f"AWS API Error: {e}")
+#     return None
+# except Exception as e:
+#     print(f"An unexpected error occurred: {e}")
+#     return None
 
 
 def lambda_handler(event, context):
@@ -230,8 +253,6 @@ def lambda_handler(event, context):
         return result
     except Exception as e:
         raise e
-    
-print(lambda_handler({
-    "conversationId": 47,
-    "content": "hi"
-}, None))
+
+
+print(lambda_handler({"conversationId": 47, "content": "hi"}, None))
