@@ -3,17 +3,18 @@ import psycopg2
 import boto3
 import uuid
 import numpy as np
+import json
 
-DB_HOST = ''
+DB_HOST = 'voice-agent-db.cluster-c1848oukey3f.us-west-2.rds.amazonaws.com'
 DB_PORT = 5432
-DB_NAME = ''
-DB_USER = ''
-DB_PASS = ''
+DB_NAME = 'postgres'
+DB_USER = 'postgres'
+DB_PASS = 'wlujAg*n*GbZ9]X6i:tIKcI$g-33'
 
 # Bedrock
 AWS_REGION = "us-west-2"  # e.g., 'us-east-1', 'us-west-2', etc.
 AGENT_ID = "H4I1KUGNCW"  # Replace with your Agent's ID
-AGENT_ALIAS_ID = "XJ83BFUVST"  # Replace with your Agent's Alias ID (often TSTALIASID for draft)
+AGENT_ALIAS_ID = "KFQOM86XP9"  # Replace with your Agent's Alias ID (often TSTALIASID for draft)
 
 # Polly
 VOICE_ID = 'Zhiyu'  # Mandarin Chinese female voice
@@ -50,10 +51,47 @@ def gen_voice(text):
     # ---- GENERATE PUBLIC URL ----
     return f"https://d18bgxx0d319kq.cloudfront.net/{filename}"
 
+def call_llm(prompt: str) -> str:
+    arguments = {
+        "modelId": "amazon.titan-text-lite-v1",
+        "contentType": "application/json",
+        "accept": "*/*",
+        "body": json.dumps({"inputText":prompt})
+    }
+    response = bedrock_agent_runtime_client.invoke_model(**arguments)
+    response_body = json.loads(response.get('body').read())
+    print(f"RESPONSE: {response_body}")
+    return response_body[0]['outputText']
 
-def parse_flow_opt(event):
+def follow_up_metadata_question(all_conversation: str, text: str) -> str:
+    metadata_list = json.loads(text)
+    system_prompt = "You are a friendly and helpful sales agent engaging a potential customer. Your goal is to gather specific metadata points through natural and engaging conversation. You will receive a list of desired metadata and a history of the conversation so far. Your task is to generate the next logical and sales-oriented question to ask the user, aiming to collect one or more pieces of metadata. Ensure the question flows naturally from the previous turn in the conversation and maintains a positive and encouraging tone. Output ONLY the next question you would ask."
+    user_prompt = f"""
+        Conversation History: {all_conversation}
+        Metadata to collect: {metadata_list}
+        
+        Next Question: 
+    """
+    return call_llm(f"{system_prompt} \n {user_prompt}")
+
+def recommend_product(all_conversation: str, text: str) -> str:
+    metadata_list = json.loads(text)
+    system_prompt = "You are a helpful and enthusiastic sales assistant. Your role is to recommend products to customers based on their needs and the ongoing conversation. You will be provided with a list of products and their details, as well as the current conversation history. Your task is to generate the next conversational turn, focusing on recommending one or more products from the list. The recommendation should be relevant to the customer's previous statements, needs, or interests expressed in the conversation. Maintain a friendly and persuasive tone, highlighting the key features and benefits of the recommended product(s) and how they address the customer's needs. Only output the next conversational turn. Do not include any other text or headers."
+    user_prompt = f"""
+        Conversation History: {all_conversation}
+        Product Details: {metadata_list}
+    """
+    return call_llm(f"{system_prompt} \n {user_prompt}")
+
+def parse_flow_opt(all_conversation: str ,event):
     node_name = event['nodeName']
-    return event['content']['document'] if 'FlowOutputNode_2' else ''
+    print( f"node_name: {node_name}")
+    if 'FlowOuputNode_2':
+        text =  event['content']['document']
+        return call_llm(recommend_product = text, all_conversation=all_conversation)
+    elif 'FlowOuputNode_1':
+        return follow_up_metadata_question(all_conversation=all_conversation, text=event['content']['document'])
+    # return event['content']['document'] if 'FlowOutputNode_2' else ''
 
 
 def invoke_rag_flow(prompt):
