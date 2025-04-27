@@ -1,6 +1,8 @@
 from datetime import datetime
 import psycopg2
 import boto3
+import uuid
+import numpy as np
 
 DB_HOST = ''
 DB_PORT = 5432
@@ -8,15 +10,45 @@ DB_NAME = ''
 DB_USER = ''
 DB_PASS = ''
 
+# Bedrock
 AWS_REGION = "us-west-2"  # e.g., 'us-east-1', 'us-west-2', etc.
 AGENT_ID = "H4I1KUGNCW"  # Replace with your Agent's ID
 AGENT_ALIAS_ID = "XJ83BFUVST"  # Replace with your Agent's Alias ID (often TSTALIASID for draft)
+
+# Polly
+VOICE_ID = 'Zhiyu'  # Mandarin Chinese female voice
+OUTPUT_FORMAT = 'pcm'  # raw audio format
+SAMPLE_RATE = 16000  # 16kHz
+
+# S3
+BUCKET_NAME = "voice-agent-file"
+
+# ---- INIT CLIENT ----
+polly = boto3.client('polly', region_name=AWS_REGION)
+s3 = boto3.client('s3', region_name=AWS_REGION)
 
 try:
     bedrock_agent_runtime_client = boto3.client('bedrock-agent-runtime',
                                                 region_name=AWS_REGION)
 except Exception as e:
     raise e
+
+
+def gen_voice(text):
+
+    # ---- CALL POLLY ----
+    response = polly.synthesize_speech(Text=text,
+                                       OutputFormat=OUTPUT_FORMAT,
+                                       VoiceId=VOICE_ID,
+                                       SampleRate=str(SAMPLE_RATE))
+
+    # ---- UPLOAD TO S3 ----
+    audio_stream = response['AudioStream']
+    filename = f"{uuid.uuid4()}.wav"
+    s3.upload_fileobj(Fileobj=audio_stream, Bucket=BUCKET_NAME, Key=filename)
+
+    # ---- GENERATE PUBLIC URL ----
+    return f"https://d18bgxx0d319kq.cloudfront.net/{filename}"
 
 
 def parse_flow_opt(event):
@@ -106,8 +138,23 @@ def lambda_handler(event, context):
                        (conversation_id, 'A001', content, now, now))
         human_msg_id = cursor.fetchone()[0]
 
+        # Retrieve all history
+        query = "SELECT * FROM message WHERE conversation_id = {} ORDER BY created_at ASC".format(
+            conversation_id)
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        content_with_prompt = ''
+        for row in rows:
+            username = row[2]
+            text = row[3]
+            content_with_prompt += '{}: {}\n'.format(username, text)
+        content_with_prompt += 'A001: content'
+
         # Invoke bedrock
-        answer = invoke_rag_flow(content)
+        answer = invoke_rag_flow(content_with_prompt)
+        print("Answer:", answer)
+        # answer = '# 推薦產品清單\n\n## 1. 眼睛保健產品\n- **商品名稱**: 東森專利葉黃素滋養倍效膠囊\n- **售價**: 市價9900元（5盒），優惠方案18盒只要8910元（買9送9，平均一盒495元）\n- **主要功效**:\n  * 修復視神經、增強夜視功能\n  * 保濕眼球、舒緩乾澀\n  * 預防青光眼、白內障和黃斑部病變\n  * 抗藍光、抗紫外線保護\n- **特色成分**: 四國專利Lutemax®葉黃素、高濃度綠蜂膠、小分子玻尿酸\n- **適用人群**: 3C使用者、銀髮族、眼睛疲勞者、眼睛手術後保養\n\n## 2. 體重管理產品\n- **商品名稱**: 東森完美動能極孅果膠\n- **售價**: 市價1980元/盒（10包），優惠方案五盒只要1980元（買一送四）\n- **主要功效**:\n  * 增加飽足感，控制食慾\n  * 促進腸道蠕動，改善便秘\n  * 調控血糖吸收，減少脂肪囤積\n  * 可作為代餐（每包僅約78.3大卡）\n- **特色成分**: 魔芋萃取物、菊苣纖維、日本栗子種皮萃取物\n- **適用人群**: 想瘦身/控制體重者、便秘者、三餐不定時的上班族\n\n## 3. 美容養顏產品\n- 暫無詳細產品資料提供\n\n## 4. 護膚SPA服務\n- 暫無詳細服務資料提供\n\n您對哪項推薦產品有興趣？我可以提供更多相關資訊。'
+        voice = gen_voice(answer)
         cursor.execute(insert_query,
                        (conversation_id, '0000', answer, now, now))
         ai_msg_id = cursor.fetchone()[0]
@@ -127,19 +174,10 @@ def lambda_handler(event, context):
             "id": ai_msg_id,
             "username": "0000",
             "content": answer,
-            "voice": "https://example.com/audio/voice-message-12345.mp3",
+            "voice": voice,
             "createdAt": now.isoformat()
         }
         result = [human_message, ai_message]
         return result
     except Exception as e:
         raise e
-
-
-print(
-    lambda_handler(
-        {
-            'content':
-            '保健:   可推薦商品類別: 強化靈活關節, 眼睛保健, 腸胃保健   是否有高健康意識: 是  基本類別:   居住縣市: 台北市文山區   年齡區間: 60-69   性別: 女   星座: 天蠍座   會員年資分組: 10年以上-15年以下   會員等級: B級會員  寵物:   寵物類型: 狗   有無養寵物: 有  旅遊:   旅遊國家偏好: 日韓, 歐美   有無旅遊偏好: 有  生活:   有無生活用品偏好: 有  美容:   有無美容偏好: 有   美妝保養類型偏好: 護膚SPA  食品:   是否曾買過素食: 是   有無食品偏好: 有',
-            'conversationId': 1
-        }, None))
