@@ -86,13 +86,12 @@ def recommend_product(all_conversation: str, text: str) -> str:
 def parse_flow_opt(all_conversation: str ,event):
     node_name = event['nodeName']
     print( f"node_name: {node_name}")
+    print(f"event: {event['content']['document']}")
     if 'FlowOuputNode_2':
         text =  event['content']['document']
         return call_llm(recommend_product = text, all_conversation=all_conversation)
     elif 'FlowOuputNode_1':
         return follow_up_metadata_question(all_conversation=all_conversation, text=event['content']['document'])
-    # return event['content']['document'] if 'FlowOutputNode_2' else ''
-
 
 def invoke_rag_flow(prompt):
 
@@ -139,7 +138,7 @@ def invoke_rag_flow(prompt):
                 # print(json.dumps(event['attribution'], indent=2))
                 pass
             elif 'flowOutputEvent' in event:
-                completion += parse_flow_opt(event['flowOutputEvent'])
+                completion += parse_flow_opt(all_conversation=prompt,event=event['flowOutputEvent'])
             else:
                 print(f"\nWarning: Received unknown event type: {event}")
 
@@ -219,3 +218,8 @@ def lambda_handler(event, context):
         return result
     except Exception as e:
         raise e
+    
+print(lambda_handler({
+    "conversationId": 2,
+    "content": "保健:   可推薦商品類別: 強化靈活關節, 眼睛保健, 腸胃保健   是否有高健康意識: 是  基本類別:   居住縣市: 台北市文山區   年齡區間: 60-69   性別: 女   星座: 天蠍座   會員年資分組: 10年以上-15年以下   會員等級: B級會員  寵物:   寵物類型: 狗   有無養寵物: 有  旅遊:   旅遊國家偏好: 日韓, 歐美   有無旅遊偏好: 有  生活:   有無生活用品偏好: 有  美容:   有無美容偏好: 有   美妝保養類型偏好: 護膚SPA  食品:   是否曾買過素食: 是   有無食品偏好: 有"
+}, None))
