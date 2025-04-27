@@ -31,6 +31,7 @@ s3 = boto3.client('s3', region_name=AWS_REGION)
 try:
     bedrock_agent_runtime_client = boto3.client('bedrock-agent-runtime',
                                                 region_name=AWS_REGION)
+    bedrock_llm_runtime = boto3.client('bedrock-runtime', region_name=AWS_REGION)
 except Exception as e:
     raise e
 
@@ -52,50 +53,61 @@ def gen_voice(text):
     return f"https://d18bgxx0d319kq.cloudfront.net/{filename}"
 
 def call_llm(prompt: str) -> str:
+    body = {
+         "anthropic_version": "bedrock-2023-05-31",
+        "messages": [
+            {
+                "role": "user",
+                "content": prompt,
+            }
+        ],
+        "max_tokens": 8152,
+        "temperature": 0.7
+    }
+    
     arguments = {
-        "modelId": "amazon.titan-text-lite-v1",
+        "modelId": "anthropic.claude-3-5-haiku-20241022-v1:0",
         "contentType": "application/json",
         "accept": "*/*",
-        "body": json.dumps({"inputText":prompt})
+        "body": json.dumps(body)
     }
-    response = bedrock_agent_runtime_client.invoke_model(**arguments)
+    response = bedrock_llm_runtime.invoke_model(**arguments)
     response_body = json.loads(response.get('body').read())
     print(f"RESPONSE: {response_body}")
-    return response_body[0]['outputText']
+    return response_body['content'][0]['text']
 
 def follow_up_metadata_question(all_conversation: str, text: str) -> str:
-    metadata_list = json.loads(text)
     system_prompt = "You are a friendly and helpful sales agent engaging a potential customer. Your goal is to gather specific metadata points through natural and engaging conversation. You will receive a list of desired metadata and a history of the conversation so far. Your task is to generate the next logical and sales-oriented question to ask the user, aiming to collect one or more pieces of metadata. Ensure the question flows naturally from the previous turn in the conversation and maintains a positive and encouraging tone. Output ONLY the next question you would ask."
     user_prompt = f"""
         Conversation History: {all_conversation}
-        Metadata to collect: {metadata_list}
-        
+        Metadata to collect: {text}
+        ONLY ASK 1 QUESTIONS USING CHINESE TRADITIONAL
         Next Question: 
     """
-    return call_llm(f"{system_prompt} \n {user_prompt}")
+    prompt = f"{system_prompt} \n {user_prompt}"
+    return call_llm(prompt=prompt)
 
 def recommend_product(all_conversation: str, text: str) -> str:
-    metadata_list = json.loads(text)
     system_prompt = "You are a helpful and enthusiastic sales assistant. Your role is to recommend products to customers based on their needs and the ongoing conversation. You will be provided with a list of products and their details, as well as the current conversation history. Your task is to generate the next conversational turn, focusing on recommending one or more products from the list. The recommendation should be relevant to the customer's previous statements, needs, or interests expressed in the conversation. Maintain a friendly and persuasive tone, highlighting the key features and benefits of the recommended product(s) and how they address the customer's needs. Only output the next conversational turn. Do not include any other text or headers."
     user_prompt = f"""
         Conversation History: {all_conversation}
-        Product Details: {metadata_list}
+        Product Details: {text}
     """
-    return call_llm(f"{system_prompt} \n {user_prompt}")
+    prompt = f"{system_prompt} \n {user_prompt}"
+    return call_llm(prompt=prompt)
 
 def parse_flow_opt(all_conversation: str ,event):
+    
     node_name = event['nodeName']
-    print( f"node_name: {node_name}")
-    print(f"event: {event['content']['document']}")
-    if 'FlowOuputNode_2':
+    if node_name ==  'FlowOuputNode_2':
         text =  event['content']['document']
-        return call_llm(recommend_product = text, all_conversation=all_conversation)
-    elif 'FlowOuputNode_1':
+        return recommend_product(text = text, all_conversation=all_conversation)
+    elif node_name == 'FlowOutputNode_1':
         return follow_up_metadata_question(all_conversation=all_conversation, text=event['content']['document'])
 
 def invoke_rag_flow(prompt):
 
-    try:
+    # try:
         # Invoke the agent
         response = bedrock_agent_runtime_client.invoke_flow(
             flowIdentifier=AGENT_ID,
@@ -145,12 +157,12 @@ def invoke_rag_flow(prompt):
         print("\n--- End of Agent Response ---")
         return completion  # Return the full concatenated response
 
-    except boto3.exceptions.Boto3Error as e:
-        print(f"AWS API Error: {e}")
-        return None
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        return None
+    # except boto3.exceptions.Boto3Error as e:
+    #     print(f"AWS API Error: {e}")
+    #     return None
+    # except Exception as e:
+    #     print(f"An unexpected error occurred: {e}")
+    #     return None
 
 
 def lambda_handler(event, context):
@@ -220,6 +232,6 @@ def lambda_handler(event, context):
         raise e
     
 print(lambda_handler({
-    "conversationId": 2,
-    "content": "保健:   可推薦商品類別: 強化靈活關節, 眼睛保健, 腸胃保健   是否有高健康意識: 是  基本類別:   居住縣市: 台北市文山區   年齡區間: 60-69   性別: 女   星座: 天蠍座   會員年資分組: 10年以上-15年以下   會員等級: B級會員  寵物:   寵物類型: 狗   有無養寵物: 有  旅遊:   旅遊國家偏好: 日韓, 歐美   有無旅遊偏好: 有  生活:   有無生活用品偏好: 有  美容:   有無美容偏好: 有   美妝保養類型偏好: 護膚SPA  食品:   是否曾買過素食: 是   有無食品偏好: 有"
+    "conversationId": 47,
+    "content": "hi"
 }, None))
