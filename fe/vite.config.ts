@@ -28,6 +28,7 @@ export default defineConfig({
         },
       ],
     }),
+    
   ],
   resolve: {
     alias: {
@@ -37,4 +38,13 @@ export default defineConfig({
       '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs',
     },
   },
+  server: {
+    proxy: {
+      '/audio-proxy': {
+        target: 'https://d18bgxx0d319kq.cloudfront.net',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/audio-proxy/, '')
+      }
+    }
+  }
 })

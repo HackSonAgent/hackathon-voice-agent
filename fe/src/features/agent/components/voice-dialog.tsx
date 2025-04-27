@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Mic, MicOff, Loader2, X } from 'lucide-react'
 import * as THREE from 'three'
@@ -115,6 +116,7 @@ export function VoiceDialog({
   }, [audioLevel])
 
   // Initialize Three.js scene
+  // First, modify your useEffect for the THREE.js initialization
   useEffect(() => {
     if (!isOpen || !canvasRef.current) return
 
@@ -164,11 +166,6 @@ export function VoiceDialog({
     // Start animation
     animate()
 
-    // Start playback if in playback mode
-    if (playbackMode && audioUrl) {
-      startPlayback(audioUrl)
-    }
-
     // Cleanup function
     return () => {
       if (animationFrameRef.current) {
@@ -180,11 +177,24 @@ export function VoiceDialog({
         canvasRef.current.removeChild(rendererRef.current.domElement)
       }
 
-      // Clean up audio
-      stopPlayback()
     }
-  }, [isOpen, animate, playbackMode, audioUrl])
+  }, [isOpen, animate])  // Remove playbackMode and audioUrl from dependencies
 
+  // Then, add a separate useEffect for handling playback
+  useEffect(() => {
+    console.log({ isOpen , playbackMode , audioUrl})
+    // Only proceed if the dialog is open and we're in playback mode with a URL
+    if (isOpen && playbackMode && audioUrl) {
+      // Add a small delay to ensure DOM is ready and Three.js is initialized
+      const playbackTimer = setTimeout(() => {
+        // Only start playback if everything is properly set up
+          startPlayback(audioUrl)
+        
+      }, 100) // Small delay to ensure DOM is ready
+
+      return () => clearTimeout(playbackTimer)
+    }
+  }, [isOpen, playbackMode, audioUrl])
   // Handle audio level updates
   useEffect(() => {
     if (isListening || isPlaying) {
@@ -207,59 +217,127 @@ export function VoiceDialog({
 
   // Start audio playback and analysis
   const startPlayback = (url: string) => {
+    console.log('Starting playback with URL:', url);
     try {
-      // Create audio context for analysis
-      audioContextRef.current = new (window.AudioContext ||
-        window.AudioContext)()
-      analyserRef.current = audioContextRef.current.createAnalyser()
-      analyserRef.current.fftSize = 256
+      // Create audio context for analysis if it doesn't exist
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || window.AudioContext)();
+        // Resume the audio context to ensure it's not suspended
+        audioContextRef.current.resume().catch(e => console.error('Failed to resume audio context:', e));
+      }
 
-      // Create audio element
-      audioElementRef.current = new Audio(url)
-      audioElementRef.current.crossOrigin = 'anonymous' // Required for external audio sources
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 256;
 
-      // Connect audio to analyzer
-      audioSourceRef.current = audioContextRef.current.createMediaElementSource(audioElementRef.current)
-      audioSourceRef.current.connect(analyserRef.current)
-      analyserRef.current.connect(audioContextRef.current.destination)
+      // Create proper proxy URL
+      const proxyUrl = url.replace('https://d18bgxx0d319kq.cloudfront.net', '/audio-proxy');
+      console.log('Using proxy URL:', proxyUrl);
 
-      // Play audio
-      audioElementRef.current.play().then(() => {
-        setIsPlaying(true)
-      }).catch(error => {
-        console.error('Audio playback error:', error)
-      })
+      // Create audio element with debugging
+      audioElementRef.current = new Audio();
+      audioElementRef.current.crossOrigin = 'anonymous';
+      audioElementRef.current.preload = 'auto'; // Ensure audio is preloaded
+
+      // Add more comprehensive event listeners for debugging
+      audioElementRef.current.addEventListener('canplay', () => {
+        console.log('Audio can play, duration:', audioElementRef.current?.duration);
+      });
+
+      audioElementRef.current.addEventListener('canplaythrough', () => {
+        console.log('Audio can play through');
+      });
+
+      audioElementRef.current.addEventListener('error', (e) => {
+        console.error('Audio error:', e);
+      });
+
+      audioElementRef.current.addEventListener('stalled', () => {
+        console.warn('Audio stalled');
+      });
+
+      audioElementRef.current.addEventListener('suspend', () => {
+        console.warn('Audio suspended');
+      });
+
+      audioElementRef.current.addEventListener('timeupdate', () => {
+        console.log('Time update:', audioElementRef.current?.currentTime, '/', audioElementRef.current?.duration);
+      });
+
+      // Set the source after adding listeners
+      audioElementRef.current.src = proxyUrl;
+
+      // Connect audio to analyzer only when ready
+      audioElementRef.current.addEventListener('loadedmetadata', () => {
+        console.log('Audio metadata loaded, duration:', audioElementRef.current?.duration);
+        if (!audioContextRef.current || !analyserRef.current || !audioElementRef.current) return
+        try {
+          audioSourceRef.current = audioContextRef.current.createMediaElementSource(audioElementRef.current);
+          audioSourceRef.current.connect(analyserRef.current);
+          analyserRef.current.connect(audioContextRef.current.destination);
+        } catch (error) {
+          console.error('Failed to connect audio nodes:', error);
+        }
+      });
+
+      // Play audio when it's ready
+      audioElementRef.current.addEventListener('loadeddata', () => {
+        console.log('Audio data loaded');
+        if (!audioElementRef.current) return
+        audioElementRef.current.play()
+          .then(() => {
+            console.log('Playback started successfully');
+            setIsPlaying(true);
+          })
+          .catch(error => {
+            console.error('Audio playback error:', error);
+          });
+      });
 
       // Handle when audio finishes
       audioElementRef.current.onended = () => {
-        stopPlayback()
-      }
-    } catch (error) {
-      console.error('Audio playback setup error:', error)
-    }
-  }
+        console.log('Audio ended naturally');
+        stopPlayback();
+      };
 
+    } catch (error) {
+      console.error('Audio playback setup error:', error);
+    }
+  };
   // Stop audio playback
   const stopPlayback = () => {
-    setIsPlaying(false)
-    setAudioLevel(0)
+    console.log('Stopping playback');
+    setIsPlaying(false);
+    setAudioLevel(0);
 
     if (audioElementRef.current) {
-      audioElementRef.current.pause()
-      audioElementRef.current.currentTime = 0
-      audioElementRef.current = null
+      // Remove all event listeners to prevent memory leaks
+      audioElementRef.current.oncanplay = null;
+      audioElementRef.current.oncanplaythrough = null;
+      audioElementRef.current.onerror = null;
+      audioElementRef.current.onstalled = null;
+      audioElementRef.current.onsuspend = null;
+      audioElementRef.current.ontimeupdate = null;
+      audioElementRef.current.onended = null;
+      audioElementRef.current.onloadedmetadata = null;
+      audioElementRef.current.onloadeddata = null;
+
+      audioElementRef.current.pause();
+      audioElementRef.current.currentTime = 0;
+      audioElementRef.current = null;
     }
 
     if (audioSourceRef.current) {
-      audioSourceRef.current.disconnect()
-      audioSourceRef.current = null
+      audioSourceRef.current.disconnect();
+      audioSourceRef.current = null;
     }
 
-    if (audioContextRef.current) {
-      audioContextRef.current.close().catch(e => console.error(e))
-      audioContextRef.current = null
+    // Don't close the audio context immediately, which could cause issues
+    // if you need to start playback again soon
+    // Instead, just disconnect what needs to be disconnected
+    if (analyserRef.current) {
+      analyserRef.current.disconnect();
     }
-  }
+  };
 
   // Start audio recording and analysis
   const startListening = async () => {
