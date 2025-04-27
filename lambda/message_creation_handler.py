@@ -22,6 +22,7 @@ AGENT_ALIAS_ID = "KJO2KVHJO3"  # Replace with your Agent's Alias ID (often TSTAL
 VOICE_ID = 'Zhiyu'  # Mandarin Chinese female voice
 OUTPUT_FORMAT = 'pcm'  # raw audio format
 SAMPLE_RATE = 16000  # 16kHz
+CHANNELS = 1
 
 AGENT_ID_2= "8VDFS209D6"
 AGENT_ALIAS_ID_2 = "BE8FSGGFGL"
@@ -121,11 +122,11 @@ def recommend_product(all_conversation: str, text: str) -> str:
 def parse_flow_opt(all_conversation: str, event):
 
     node_name = event['nodeName']
-    if node_name == 'FlowOuputNode_2':
+    if node_name == 'FlowOutputNode_2':
         text = event['content']['document']
-        return recommend_product(text=text, all_conversation=all_conversation)
+        return 2, recommend_product(text=text, all_conversation=all_conversation)
     elif node_name == 'FlowOutputNode_1':
-        return follow_up_metadata_question(all_conversation=all_conversation,
+        return 1, follow_up_metadata_question(all_conversation=all_conversation,
                                            text=event['content']['document'])
 
 
@@ -158,6 +159,7 @@ def invoke_rag_flow(prompt):
         return None
 
     print("Agent Response:")
+    stage = 1
     for event in response_stream:
         if 'chunk' in event:
             data = event['chunk']['bytes']
@@ -174,13 +176,13 @@ def invoke_rag_flow(prompt):
             # print(json.dumps(event['attribution'], indent=2))
             pass
         elif 'flowOutputEvent' in event:
-            completion += parse_flow_opt(all_conversation=prompt,
-                                         event=event['flowOutputEvent'])
+            stage, opt = parse_flow_opt(all_conversation=prompt,event=event['flowOutputEvent'])
+            completion += opt
         else:
             print(f"\nWarning: Received unknown event type: {event}")
 
     print("\n--- End of Agent Response ---")
-    return completion  # Return the full concatenated response
+    return stage, completion  # Return the full concatenated response
 
 # except boto3.exceptions.Boto3Error as e:
 #     print(f"AWS API Error: {e}")
@@ -269,6 +271,9 @@ def lambda_handler(event, context):
 
     content = event.get("content")
     conversation_id = event.get("conversationId")
+    stage  = event.get("stage") if "stage" in event else None
+    count = event.get("count") if "count" in event else 0
+
     try:
 
         now = datetime.utcnow()
@@ -300,7 +305,11 @@ def lambda_handler(event, context):
         content_with_prompt += 'A001: content'
 
         # Invoke bedrock
-        answer = invoke_rag_flow_stage_2(content_with_prompt,count=0)
+        answer = ""
+        if stage == 2:
+            answer = invoke_rag_flow_stage_2(content_with_prompt,count=count)
+        else:
+            stage, answer = invoke_rag_flow(content_with_prompt)
         print("Answer:", answer)
         # answer = '# 推薦產品清單\n\n## 1. 眼睛保健產品\n- **商品名稱**: 東森專利葉黃素滋養倍效膠囊\n- **售價**: 市價9900元（5盒），優惠方案18盒只要8910元（買9送9，平均一盒495元）\n- **主要功效**:\n  * 修復視神經、增強夜視功能\n  * 保濕眼球、舒緩乾澀\n  * 預防青光眼、白內障和黃斑部病變\n  * 抗藍光、抗紫外線保護\n- **特色成分**: 四國專利Lutemax®葉黃素、高濃度綠蜂膠、小分子玻尿酸\n- **適用人群**: 3C使用者、銀髮族、眼睛疲勞者、眼睛手術後保養\n\n## 2. 體重管理產品\n- **商品名稱**: 東森完美動能極孅果膠\n- **售價**: 市價1980元/盒（10包），優惠方案五盒只要1980元（買一送四）\n- **主要功效**:\n  * 增加飽足感，控制食慾\n  * 促進腸道蠕動，改善便秘\n  * 調控血糖吸收，減少脂肪囤積\n  * 可作為代餐（每包僅約78.3大卡）\n- **特色成分**: 魔芋萃取物、菊苣纖維、日本栗子種皮萃取物\n- **適用人群**: 想瘦身/控制體重者、便秘者、三餐不定時的上班族\n\n## 3. 美容養顏產品\n- 暫無詳細產品資料提供\n\n## 4. 護膚SPA服務\n- 暫無詳細服務資料提供\n\n您對哪項推薦產品有興趣？我可以提供更多相關資訊。'
         voice = gen_voice(answer)
@@ -316,6 +325,7 @@ def lambda_handler(event, context):
             "id": human_msg_id,
             "username": "A001",
             "content": content,
+            "stage": stage,
             "voice": None,
             "createdAt": now.isoformat()
         }
@@ -323,6 +333,7 @@ def lambda_handler(event, context):
             "id": ai_msg_id,
             "username": "0000",
             "content": answer,
+            "stage": stage,
             "voice": voice,
             "createdAt": now.isoformat()
         }
@@ -332,4 +343,9 @@ def lambda_handler(event, context):
         raise e
 
 
-print(lambda_handler({"conversationId": 47, "content": "hi"}, None))
+print(lambda_handler({
+    "content": "我是A會員,我今年18歲,我是男性",
+    "conversationId": 81,
+    "stage": 1,
+    "count": 0
+}, None))
