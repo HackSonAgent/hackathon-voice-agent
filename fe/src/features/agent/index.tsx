@@ -21,6 +21,7 @@ import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { VoiceDialog } from './components/voice-dialog'
 
+
 // 整合 API 響應的訊息界面
 interface Message {
   id: number
@@ -28,6 +29,7 @@ interface Message {
   sender: 'user' | 'ai'
   timestamp: string
   voice?: string
+  stage:number
 }
 
 // 訊息組件
@@ -140,6 +142,10 @@ export default function ChatBoard() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [conversation, setConversation] = useState<MessageResponse>()
+  const [currentStage, setCurrentStage] = useState<number>(0)
+  const [currentCount, setCurrentCount] = useState<number>(0)
+
+
 
   // 格式化時間戳
   const formatTimestamp = (isoString: string): string => {
@@ -186,24 +192,27 @@ export default function ChatBoard() {
       }
 
       // Now send the message using the conversation ID
-      const response = await sendMessage(messageContent, currentConversation.id)
+      const response = await sendMessage(messageContent, currentConversation.id, currentStage,currentCount)
 
       // Process API response
       const newMessages = response.map((msg: MessagesResponse): Message => {
         const sender =
           msg.username === '0000' ? 'ai' : ('user' as 'user' | 'ai')
         const timestamp = formatTimestamp(msg.createdAt)
-
+        setCurrentStage(msg.stage)
+        if(msg.stage === 2){
+          setCurrentCount((val:number)=> val++)
+        }
         return {
           id: msg.id,
           content: msg.content,
           sender,
           timestamp,
           voice: msg.voice,
+          stage:msg.stage
         }
       })
       
-
       // Add new messages to UI
       setMessages((prev) => [...prev, ...newMessages])
     } catch (err) {

@@ -230,8 +230,7 @@ export function VoiceDialog({
       analyserRef.current.fftSize = 256;
 
       // Create proper proxy URL
-      const proxyUrl = url.replace('https://d18bgxx0d319kq.cloudfront.net', '/audio-proxy');
-      console.log('Using proxy URL:', proxyUrl);
+
 
       // Create audio element with debugging
       audioElementRef.current = new Audio();
@@ -264,7 +263,7 @@ export function VoiceDialog({
       });
 
       // Set the source after adding listeners
-      audioElementRef.current.src = proxyUrl;
+      audioElementRef.current.src = url;
 
       // Connect audio to analyzer only when ready
       audioElementRef.current.addEventListener('loadedmetadata', () => {

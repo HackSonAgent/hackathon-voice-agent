@@ -28,6 +28,7 @@ export interface MessagesResponse {
   content: string
   createdAt: string
   voice: string
+  stage:number
 }
 
 export const createNewConversation = async (): Promise<MessageResponse> => {
@@ -60,7 +61,9 @@ export const createNewConversation = async (): Promise<MessageResponse> => {
  */
 export const sendMessage = async (
   content: string,
-  conversationId: number
+  conversationId: number,
+  stage:number,
+  count:number
 ): Promise<MessagesResponse[]> => {
   try {
     const response = await fetch(`${import.meta.env.VITE_API_PATH}/messages`, {
@@ -68,7 +71,7 @@ export const sendMessage = async (
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ content, conversationId }),
+      body: JSON.stringify({ content, conversationId,stage,count }),
     })
 
     if (!response.ok) {
